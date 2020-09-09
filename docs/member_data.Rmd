@@ -1,0 +1,185 @@
+---
+title: "Congressional Record Data"
+subtitle: 
+author: ""
+output:
+    # pdf_document:
+    #   toc: true
+    #   keep_tex: true
+    html_document:
+      highlight: zenburn
+      toc: true
+      toc_float: true
+      code_folding: hide
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r global.options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      cache = FALSE, 
+                      fig.width=8.5, 
+                      split = T,
+                      fig.align = 'center', 
+                      fig.path='figs/',
+                      warning=FALSE, 
+                      message=FALSE)
+
+
+library(tidyverse)
+library(readr)
+library(magrittr)
+library(tidytext)
+library(knitr)
+library(kableExtra)
+library(here)
+
+library(ggplot2); theme_set(theme_bw())
+  options(
+    ggplot2.continuous.color = "viridis",
+    ggplot2.continuous.fill = "viridis"
+  )
+  scale_color_discrete <- function(...)
+    scale_color_viridis_d(...)
+  scale_fill_discrete <- function(...)
+    scale_fill_viridis_d(...)
+  
+kablebox <- . %>%  knitr::kable() %>% 
+  kable_styling() %>% 
+  scroll_box(height = "400px")
+```
+
+# Join Congressional Record speech data with Voteview data
+
+## Starting with Hein-bound records
+
+```{r}
+# a function to read speaker data 
+get_speakers <- function(file){
+  
+  message(file)
+  
+  read_delim(str_c(here("hein-bound/", file) %>% str_remove("/cr") ),
+           delim = "|") %>% 
+  # drop speech data for now
+  select(-speech_id) %>% 
+  # extract congress from file name
+  mutate(congress = str_remove(file, "_.*") ) %>% 
+  distinct()
+}
+
+# files 
+heinbound <- list.files(here("hein-bound") %>% str_remove("/cr") ) %>% 
+  enframe(value = "file")
+
+# subset to speakermap files from recent congresses
+speakermaps <- heinbound %>% 
+  filter(str_detect(file, "SpeakerMap"),
+         str_detect(file, "^1") #FIXME subsetting to >99th congress
+         )
+
+# speakers dataframe
+speakers <- map_dfr(speakermaps$file,
+        get_speakers)
+
+# match to voteview format 
+speakers %<>% 
+  mutate(last_name = lastname,
+         first_name = str_to_sentence(firstname),
+         congress = congress %>% str_remove("^0") %>% as.numeric(),
+         chamber = chamber %>% 
+           str_replace("S$", "Senate") %>% 
+           str_replace("H$", "House"),
+         district_code = ifelse(chamber == "Senate", 0, district) %>% as.numeric()
+         ) 
+
+speakers %<>% 
+  rename(state_abbrev = state)
+
+# FIXME focusing on the 107-111th for now 
+speakers %<>% 
+  filter(congress > 107) 
+
+# Devin's members data (expanded from voteview)
+load(here("data", "members.Rdata"))
+# members %>% select(names(members)[names(members) %in% names(speakers)])
+
+# Make mixed case names, like "McConnell" upper (to go the other way, we would need to fix them one by one)
+members %<>% 
+  mutate(last_name = str_to_upper(last_name),
+         party = str_sub(party_name, 1, 1))
+```
+
+### Unfortunately, first names not consistent across datasets. 
+
+```{r}
+speakers %>% 
+  select( -district_code) %>%
+  anti_join(members) %>% 
+  select(-first_name) %>% 
+  left_join(members) %>% 
+  select(voteview_first_name = first_name,
+         speakermap_firstname = firstname, 
+         lastname) %>% 
+  distinct() %>% 
+  arrange(lastname) %>% kablebox()
+```
+
+---
+
+
+### Some observations in the Hein records are missing district information.
+
+(Hereth Sandlin, Cubin, Rehberg, Young), making them fail to match.
+
+### Because they don't have voting records, non-voting members are not in the Voteview data. 
+
+If we drop first names and districts, we match almost all voting members, but we also over-match.
+
+Mary Bono Mack also fails to match because she is just Mary Bono in Voteview. 
+
+```{r}
+# mismatches 
+speakers %>% 
+  select(-first_name) %>%
+  anti_join(members) %>% 
+  kablebox()
+```
+
+---
+
+Without matching on first names, we get duplicate matches, e.g., André CARSON was appointed to fill the seat of his grandmother, Julia May CARSON:
+
+```{r}
+# overmatches in speakers data
+speakers %>% 
+  count(congress, chamber, last_name, state_abbrev, party, district) %>%
+  filter(n>1) %>% 
+  kablebox()
+
+# potential overmatches
+members %>% 
+  count(congress, chamber, last_name, state_abbrev, party, district_code) %>%
+  filter(n>1) %>% 
+  kablebox()
+```
+
+---
+
+Without matching on first names OR districts (because of missing district data), we get even more duplicate/potential duplicate matches.
+
+```{r}
+# overmatches in speakers data
+speakers %>% 
+  count(congress, chamber, last_name, state_abbrev, party) %>%
+  filter(n>1) %>% 
+  kablebox()
+
+# potential overmatches
+members %>% 
+  count(congress, chamber, last_name, state_abbrev, party) %>%
+  filter(n>1) %>% 
+  kablebox()
+```
+
