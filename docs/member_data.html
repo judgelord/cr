@@ -1869,7 +1869,7 @@ div.tocify {
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true"></a>  <span class="kw">message</span>(file)</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true"></a>  </span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true"></a>  <span class="kw">read_delim</span>(<span class="kw">str_c</span>(<span class="kw">here</span>(<span class="st">&quot;hein-bound/&quot;</span>, file) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">str_remove</span>(<span class="st">&quot;/cr&quot;</span>) ),</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true"></a>           <span class="dt">delim =</span> <span class="st">&quot;|&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true"></a>             <span class="dt">delim =</span> <span class="st">&quot;|&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true"></a><span class="st">  </span><span class="co"># drop speech data for now</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>speech_id) <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true"></a><span class="st">  </span><span class="co"># extract congress from file name</span></span>
@@ -1888,37 +1888,44 @@ div.tocify {
 <span id="cb1-23"><a href="#cb1-23" aria-hidden="true"></a>         )</span>
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true"></a></span>
 <span id="cb1-25"><a href="#cb1-25" aria-hidden="true"></a><span class="co"># speakers dataframe</span></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true"></a>speakers &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(speakermaps<span class="op">$</span>file,</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true"></a>        get_speakers)</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true"></a></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true"></a><span class="co"># match to voteview format </span></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true"></a>speakers <span class="op">%&lt;&gt;%</span><span class="st"> </span></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">last_name =</span> lastname,</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true"></a>         <span class="dt">first_name =</span> <span class="kw">str_to_sentence</span>(firstname),</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true"></a>         <span class="dt">congress =</span> congress <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">str_remove</span>(<span class="st">&quot;^0&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">as.numeric</span>(),</span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true"></a>         <span class="dt">chamber =</span> chamber <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true"></a><span class="st">           </span><span class="kw">str_replace</span>(<span class="st">&quot;S$&quot;</span>, <span class="st">&quot;Senate&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true"></a><span class="st">           </span><span class="kw">str_replace</span>(<span class="st">&quot;H$&quot;</span>, <span class="st">&quot;House&quot;</span>),</span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true"></a>         <span class="dt">district_code =</span> <span class="kw">ifelse</span>(chamber <span class="op">==</span><span class="st"> &quot;Senate&quot;</span>, <span class="dv">0</span>, district) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">as.numeric</span>()</span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true"></a>         ) </span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true"></a></span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true"></a>speakers <span class="op">%&lt;&gt;%</span><span class="st"> </span></span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true"></a><span class="st">  </span><span class="kw">rename</span>(<span class="dt">state_abbrev =</span> state)</span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true"></a></span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true"></a><span class="co"># </span><span class="al">FIXME</span><span class="co"> focusing on the 107-111th for now </span></span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true"></a>speakers <span class="op">%&lt;&gt;%</span><span class="st"> </span></span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true"></a><span class="st">  </span><span class="kw">filter</span>(congress <span class="op">&gt;</span><span class="st"> </span><span class="dv">107</span>) </span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true"></a></span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true"></a><span class="co"># Devin&#39;s members data (expanded from voteview)</span></span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true"></a><span class="kw">load</span>(<span class="kw">here</span>(<span class="st">&quot;data&quot;</span>, <span class="st">&quot;members.Rdata&quot;</span>))</span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true"></a><span class="co"># members %&gt;% select(names(members)[names(members) %in% names(speakers)])</span></span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true"></a></span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true"></a><span class="co"># Make mixed case names, like &quot;McConnell&quot; upper (to go the other way, we would need to fix them one by one)</span></span>
-<span id="cb1-52"><a href="#cb1-52" aria-hidden="true"></a>members <span class="op">%&lt;&gt;%</span><span class="st"> </span></span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">last_name =</span> <span class="kw">str_to_upper</span>(last_name),</span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true"></a>         <span class="dt">party =</span> <span class="kw">str_sub</span>(party_name, <span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div>
-<div id="unfortunately-first-names-not-consistent-across-datasets." class="section level3">
-<h3>Unfortunately, first names not consistent across datasets.</h3>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true"></a>speakers &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(speakermaps<span class="op">$</span>file, get_speakers)</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true"></a><span class="co"># match to voteview format </span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true"></a>speakers <span class="op">%&lt;&gt;%</span><span class="st"> </span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">last_name =</span> lastname,</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true"></a>         <span class="dt">first_name =</span> <span class="kw">str_to_sentence</span>(firstname),</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true"></a>         <span class="dt">congress =</span> congress <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">str_remove</span>(<span class="st">&quot;^0&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">as.numeric</span>(),</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true"></a>         <span class="dt">chamber =</span> chamber <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true"></a><span class="st">           </span><span class="kw">str_replace</span>(<span class="st">&quot;S$&quot;</span>, <span class="st">&quot;Senate&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true"></a><span class="st">           </span><span class="kw">str_replace</span>(<span class="st">&quot;H$&quot;</span>, <span class="st">&quot;House&quot;</span>),</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true"></a>         <span class="dt">district_code =</span> <span class="kw">ifelse</span>(chamber <span class="op">==</span><span class="st"> &quot;Senate&quot;</span>, <span class="dv">0</span>, district),</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true"></a>         <span class="co"># clean up some 0s that are actually missing data </span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true"></a>         <span class="dt">district_code =</span>  <span class="kw">ifelse</span>(chamber <span class="op">==</span><span class="st"> &quot;House&quot;</span> <span class="op">&amp;</span><span class="st"> </span>district_code <span class="op">==</span><span class="st"> &quot;0&quot;</span>, <span class="ot">NA</span>, district_code) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true"></a><span class="st">           </span><span class="kw">as.numeric</span>() </span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true"></a>         ) </span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true"></a></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true"></a>speakers <span class="op">%&lt;&gt;%</span><span class="st"> </span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true"></a><span class="st">  </span><span class="kw">rename</span>(<span class="dt">state_abbrev =</span> state)</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true"></a></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true"></a><span class="co"># </span><span class="al">FIXME</span><span class="co"> focusing on the 107-111th for now </span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true"></a>speakers <span class="op">%&lt;&gt;%</span><span class="st"> </span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true"></a><span class="st">  </span><span class="kw">filter</span>(congress <span class="op">&gt;</span><span class="st"> </span><span class="dv">106</span>)</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true"></a></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true"></a></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true"></a><span class="co"># Devin&#39;s members data (expanded from voteview)</span></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true"></a><span class="kw">load</span>(<span class="kw">here</span>(<span class="st">&quot;data&quot;</span>, <span class="st">&quot;members.Rdata&quot;</span>))</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true"></a><span class="co"># members %&gt;% select(names(members)[names(members) %in% names(speakers)])</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true"></a></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true"></a><span class="co"># Make mixed case names, like &quot;McConnell&quot; upper case (to go the other way, we would need to fix them one by one)</span></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true"></a>members <span class="op">%&lt;&gt;%</span><span class="st"> </span></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">last_name =</span> <span class="kw">str_to_upper</span>(last_name),</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true"></a>         <span class="dt">party =</span> <span class="kw">str_sub</span>(party_name, <span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div>
+<div id="unfortunately-first-names-are-not-consistent-across-datasets." class="section level3">
+<h3>Unfortunately, first names are not consistent across datasets.</h3>
+</div>
+<div id="because-they-dont-have-voting-records-non-voting-members-are-not-in-the-voteview-data." class="section level3">
+<h3>Because they don’t have voting records, non-voting members are not in the Voteview data.</h3>
+<p>A few last names also differ, e.g. Mary Bono Mack also fails to match because she is just Mary Bono in Voteview.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a>speakers <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true"></a><span class="st">  </span><span class="kw">select</span>( <span class="op">-</span>district_code) <span class="op">%&gt;%</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true"></a><span class="st">  </span><span class="kw">anti_join</span>(members) <span class="op">%&gt;%</span><span class="st"> </span></span>
@@ -1926,7 +1933,7 @@ div.tocify {
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true"></a><span class="st">  </span><span class="kw">left_join</span>(members) <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true"></a><span class="st">  </span><span class="kw">select</span>(<span class="dt">voteview_first_name =</span> first_name,</span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true"></a>         <span class="dt">speakermap_firstname =</span> firstname, </span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true"></a>         lastname) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true"></a>         lastname, nonvoting) <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true"></a><span class="st">  </span><span class="kw">arrange</span>(lastname) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">kablebox</span>()</span></code></pre></div>
 <div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:400px; ">
@@ -1942,6 +1949,9 @@ speakermap_firstname
 <th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
 lastname
 </th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+nonvoting
+</th>
 </tr>
 </thead>
 <tbody>
@@ -1955,6 +1965,9 @@ ANIBAL
 <td style="text-align:left;">
 ACEVEDO-VILA
 </td>
+<td style="text-align:left;">
+nonvoting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -1965,6 +1978,9 @@ W.
 </td>
 <td style="text-align:left;">
 AKIN
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -1977,6 +1993,9 @@ RODNEY
 <td style="text-align:left;">
 ALEXANDER
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -1987,6 +2006,23 @@ WAYNE
 </td>
 <td style="text-align:left;">
 ALLARD
+</td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Kenneth
+</td>
+<td style="text-align:left;">
+KEN
+</td>
+<td style="text-align:left;">
+BENTSEN
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -1999,6 +2035,9 @@ JEFF
 <td style="text-align:left;">
 BINGAMAN
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2009,6 +2048,9 @@ ROB
 </td>
 <td style="text-align:left;">
 BISHOP
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2021,6 +2063,9 @@ JO
 <td style="text-align:left;">
 BONNER
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2031,6 +2076,9 @@ MARY
 </td>
 <td style="text-align:left;">
 BONO MACK
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2043,6 +2091,9 @@ MADELEINE
 <td style="text-align:left;">
 BORDALLO
 </td>
+<td style="text-align:left;">
+nonvoting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2053,6 +2104,9 @@ DAN
 </td>
 <td style="text-align:left;">
 BOREN
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2065,6 +2119,9 @@ ALLEN
 <td style="text-align:left;">
 BOYD
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2075,6 +2132,9 @@ SAMUEL
 </td>
 <td style="text-align:left;">
 BROWNBACK
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2087,6 +2147,9 @@ VERN
 <td style="text-align:left;">
 BUCHANAN
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2097,6 +2160,9 @@ JIM
 </td>
 <td style="text-align:left;">
 BUNNING
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2109,6 +2175,23 @@ DAN
 <td style="text-align:left;">
 BURTON
 </td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Herbert
+</td>
+<td style="text-align:left;">
+H.
+</td>
+<td style="text-align:left;">
+CALLAHAN
+</td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2119,6 +2202,9 @@ DAVE
 </td>
 <td style="text-align:left;">
 CAMP
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2131,6 +2217,9 @@ CHRISTOPHER
 <td style="text-align:left;">
 CARNEY
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2141,6 +2230,9 @@ BEN
 </td>
 <td style="text-align:left;">
 CHANDLER
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2153,6 +2245,9 @@ DONNA
 <td style="text-align:left;">
 CHRISTENSEN
 </td>
+<td style="text-align:left;">
+nonvoting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2163,6 +2258,23 @@ WM.
 </td>
 <td style="text-align:left;">
 CLAY
+</td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Joseph
+</td>
+<td style="text-align:left;">
+J.
+</td>
+<td style="text-align:left;">
+CLELAND
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2175,6 +2287,9 @@ THAD
 <td style="text-align:left;">
 COCHRAN
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2185,6 +2300,9 @@ STEVE
 </td>
 <td style="text-align:left;">
 COHEN
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2197,6 +2315,9 @@ K.
 <td style="text-align:left;">
 CONAWAY
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2207,6 +2328,9 @@ CHRIS
 </td>
 <td style="text-align:left;">
 COONS
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2219,6 +2343,9 @@ JIM
 <td style="text-align:left;">
 COOPER
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2229,6 +2356,9 @@ BOB
 </td>
 <td style="text-align:left;">
 CORKER
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2241,6 +2371,23 @@ C.
 <td style="text-align:left;">
 COX
 </td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+ANDER
+</td>
+<td style="text-align:left;">
+CRENSHAW
+</td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2251,6 +2398,9 @@ JO ANN
 </td>
 <td style="text-align:left;">
 DAVIS
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2263,6 +2413,9 @@ JO ANN
 <td style="text-align:left;">
 DAVIS
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2273,6 +2426,9 @@ JAMES
 </td>
 <td style="text-align:left;">
 DAVIS
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2285,6 +2441,9 @@ GEOFF
 <td style="text-align:left;">
 DAVIS
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2295,6 +2454,9 @@ NATHAN
 </td>
 <td style="text-align:left;">
 DEAL
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2307,6 +2469,9 @@ WILLIAM
 <td style="text-align:left;">
 DELAHUNT
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2317,6 +2482,9 @@ JIM
 </td>
 <td style="text-align:left;">
 DEMINT
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2329,6 +2497,9 @@ JO ANN
 <td style="text-align:left;">
 EMERSON
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2339,6 +2510,9 @@ BOB
 </td>
 <td style="text-align:left;">
 ETHERIDGE
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2351,6 +2525,9 @@ TERRY
 <td style="text-align:left;">
 EVERETT
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2361,6 +2538,9 @@ ENI
 </td>
 <td style="text-align:left;">
 FALEOMAVAEGA
+</td>
+<td style="text-align:left;">
+nonvoting
 </td>
 </tr>
 <tr>
@@ -2373,6 +2553,9 @@ J.
 <td style="text-align:left;">
 FORBES
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2383,6 +2566,9 @@ LUIS
 </td>
 <td style="text-align:left;">
 FORTUNO
+</td>
+<td style="text-align:left;">
+nonvoting
 </td>
 </tr>
 <tr>
@@ -2395,6 +2581,9 @@ ALAN
 <td style="text-align:left;">
 FRANKEN
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2405,6 +2594,9 @@ BOB
 </td>
 <td style="text-align:left;">
 GOODLATTE
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2417,6 +2609,23 @@ BOB
 <td style="text-align:left;">
 GRAHAM
 </td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+William
+</td>
+<td style="text-align:left;">
+PHIL
+</td>
+<td style="text-align:left;">
+GRAMM
+</td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2427,6 +2636,9 @@ SAM
 </td>
 <td style="text-align:left;">
 GRAVES
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2439,6 +2651,9 @@ GENE
 <td style="text-align:left;">
 GREEN
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2449,6 +2664,9 @@ GENE
 </td>
 <td style="text-align:left;">
 GREEN
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2461,6 +2679,9 @@ J.
 <td style="text-align:left;">
 HASTERT
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2471,6 +2692,9 @@ DOC
 </td>
 <td style="text-align:left;">
 HASTINGS
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2483,6 +2707,9 @@ ROBIN
 <td style="text-align:left;">
 HAYES
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2493,6 +2720,9 @@ TIM
 </td>
 <td style="text-align:left;">
 HOLDEN
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2505,6 +2735,37 @@ MICHAEL
 <td style="text-align:left;">
 HONDA
 </td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+John
+</td>
+<td style="text-align:left;">
+STEPHEN
+</td>
+<td style="text-align:left;">
+HORN
+</td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Timothy
+</td>
+<td style="text-align:left;">
+TIM
+</td>
+<td style="text-align:left;">
+HUTCHINSON
+</td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2515,6 +2776,9 @@ KAY
 </td>
 <td style="text-align:left;">
 HUTCHISON
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2527,6 +2791,9 @@ BOB
 <td style="text-align:left;">
 INGLIS
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2538,6 +2805,9 @@ JOHN
 <td style="text-align:left;">
 ISAKSON
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2548,6 +2818,9 @@ TIM
 </td>
 <td style="text-align:left;">
 JOHNSON
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2560,6 +2833,9 @@ HENRY
 <td style="text-align:left;">
 JOHNSON
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2570,6 +2846,9 @@ STEVE
 </td>
 <td style="text-align:left;">
 KAGEN
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2582,6 +2861,9 @@ MARCY
 <td style="text-align:left;">
 KAPTUR
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2592,6 +2874,9 @@ RIC
 </td>
 <td style="text-align:left;">
 KELLER
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2604,6 +2889,9 @@ MARY JO
 <td style="text-align:left;">
 KILROY
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2614,6 +2902,9 @@ TOM
 </td>
 <td style="text-align:left;">
 LANTOS
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2626,6 +2917,9 @@ RICK
 <td style="text-align:left;">
 LARSEN
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2636,6 +2930,9 @@ TOM
 </td>
 <td style="text-align:left;">
 LATHAM
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2648,6 +2945,9 @@ JERRY
 <td style="text-align:left;">
 LEWIS
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2658,6 +2958,9 @@ JOSEPH
 </td>
 <td style="text-align:left;">
 LIEBERMAN
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2670,6 +2973,9 @@ DAVID
 <td style="text-align:left;">
 LOEBSACK
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2680,6 +2986,9 @@ TRENT
 </td>
 <td style="text-align:left;">
 LOTT
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2692,6 +3001,9 @@ KENNETH
 <td style="text-align:left;">
 LUCAS
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2702,6 +3014,9 @@ JAMES
 </td>
 <td style="text-align:left;">
 MARSHALL
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2714,6 +3029,9 @@ MEL
 <td style="text-align:left;">
 MARTINEZ
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2724,6 +3042,9 @@ JIM
 </td>
 <td style="text-align:left;">
 MATHESON
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2736,6 +3057,9 @@ MITCH
 <td style="text-align:left;">
 MCCONNELL
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2746,6 +3070,23 @@ JIM
 </td>
 <td style="text-align:left;">
 MCDERMOTT
+</td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Daniel
+</td>
+<td style="text-align:left;">
+JEFF
+</td>
+<td style="text-align:left;">
+MILLER
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2758,6 +3099,37 @@ JEFF
 <td style="text-align:left;">
 MILLER
 </td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Daniel
+</td>
+<td style="text-align:left;">
+DAN
+</td>
+<td style="text-align:left;">
+MILLER
+</td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Jefferson
+</td>
+<td style="text-align:left;">
+DAN
+</td>
+<td style="text-align:left;">
+MILLER
+</td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2768,6 +3140,9 @@ R.
 </td>
 <td style="text-align:left;">
 MILLER
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2780,6 +3155,9 @@ WALTER
 <td style="text-align:left;">
 MINNICK
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2790,6 +3168,9 @@ GWEN
 </td>
 <td style="text-align:left;">
 MOORE
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2802,16 +3183,8 @@ TIM
 <td style="text-align:left;">
 MURPHY
 </td>
-</tr>
-<tr>
 <td style="text-align:left;">
-Earl
-</td>
-<td style="text-align:left;">
-BEN
-</td>
-<td style="text-align:left;">
-NELSON
+voting
 </td>
 </tr>
 <tr>
@@ -2824,6 +3197,23 @@ BILL
 <td style="text-align:left;">
 NELSON
 </td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Earl
+</td>
+<td style="text-align:left;">
+BEN
+</td>
+<td style="text-align:left;">
+NELSON
+</td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2834,6 +3224,9 @@ DON
 </td>
 <td style="text-align:left;">
 NICKLES
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2846,6 +3239,9 @@ ELEANOR
 <td style="text-align:left;">
 NORTON
 </td>
+<td style="text-align:left;">
+nonvoting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2856,6 +3252,9 @@ C.L.
 </td>
 <td style="text-align:left;">
 OTTER
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2868,6 +3267,9 @@ BILL
 <td style="text-align:left;">
 PASCRELL
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2878,6 +3280,9 @@ THOMAS
 </td>
 <td style="text-align:left;">
 PERRIELLO
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2890,6 +3295,9 @@ PEDRO
 <td style="text-align:left;">
 PIERLUISI
 </td>
+<td style="text-align:left;">
+nonvoting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2900,6 +3308,9 @@ JACK
 </td>
 <td style="text-align:left;">
 QUINN
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2912,6 +3323,9 @@ TOM
 <td style="text-align:left;">
 REED
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2922,6 +3336,23 @@ DENNIS
 </td>
 <td style="text-align:left;">
 REHBERG
+</td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Robert
+</td>
+<td style="text-align:left;">
+BOB
+</td>
+<td style="text-align:left;">
+RILEY
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2934,6 +3365,9 @@ PAT
 <td style="text-align:left;">
 ROBERTS
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2944,6 +3378,23 @@ MIKE
 </td>
 <td style="text-align:left;">
 ROSS
+</td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Margaret
+</td>
+<td style="text-align:left;">
+MARGE
+</td>
+<td style="text-align:left;">
+ROUKEMA
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2956,6 +3407,9 @@ C.
 <td style="text-align:left;">
 RUPPERSBERGER
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2966,6 +3420,9 @@ TIM
 </td>
 <td style="text-align:left;">
 RYAN
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -2978,6 +3435,9 @@ GREGORIO
 <td style="text-align:left;">
 SABLAN
 </td>
+<td style="text-align:left;">
+nonvoting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2988,6 +3448,9 @@ KEN
 </td>
 <td style="text-align:left;">
 SALAZAR
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -3000,6 +3463,9 @@ BILL
 <td style="text-align:left;">
 SALI
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3010,6 +3476,37 @@ H.
 </td>
 <td style="text-align:left;">
 SAXTON
+</td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Charles
+</td>
+<td style="text-align:left;">
+JOE
+</td>
+<td style="text-align:left;">
+SCARBOROUGH
+</td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Robert
+</td>
+<td style="text-align:left;">
+BOB
+</td>
+<td style="text-align:left;">
+SCHAFFER
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -3022,6 +3519,9 @@ F.
 <td style="text-align:left;">
 SENSENBRENNER
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3032,6 +3532,9 @@ E.
 </td>
 <td style="text-align:left;">
 SHAW
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -3044,6 +3547,23 @@ DONALD
 <td style="text-align:left;">
 SHERWOOD
 </td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Clifford
+</td>
+<td style="text-align:left;">
+RONNIE
+</td>
+<td style="text-align:left;">
+SHOWS
+</td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3054,6 +3574,9 @@ BILL
 </td>
 <td style="text-align:left;">
 SHUSTER
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -3066,6 +3589,9 @@ IKE
 <td style="text-align:left;">
 SKELTON
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3076,6 +3602,9 @@ ZACHARY
 </td>
 <td style="text-align:left;">
 SPACE
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -3088,6 +3617,9 @@ ARLEN
 <td style="text-align:left;">
 SPECTER
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3098,6 +3630,9 @@ JACKIE
 </td>
 <td style="text-align:left;">
 SPEIER
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -3110,6 +3645,9 @@ DEBBIE
 <td style="text-align:left;">
 STABENOW
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3120,6 +3658,9 @@ TED
 </td>
 <td style="text-align:left;">
 STEVENS
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -3132,6 +3673,9 @@ WILLIAM
 <td style="text-align:left;">
 TAUZIN
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3142,6 +3686,9 @@ GENE
 </td>
 <td style="text-align:left;">
 TAYLOR
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -3154,6 +3701,9 @@ MIKE
 <td style="text-align:left;">
 THOMPSON
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3164,6 +3714,23 @@ MAC
 </td>
 <td style="text-align:left;">
 THORNBERRY
+</td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+James
+</td>
+<td style="text-align:left;">
+J.
+</td>
+<td style="text-align:left;">
+THURMOND
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -3176,6 +3743,9 @@ DINA
 <td style="text-align:left;">
 TITUS
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3186,6 +3756,9 @@ NIKI
 </td>
 <td style="text-align:left;">
 TSONGAS
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -3198,6 +3771,9 @@ JAMES
 <td style="text-align:left;">
 TURNER
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3208,6 +3784,23 @@ TOM
 </td>
 <td style="text-align:left;">
 UDALL
+</td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+ROBERT
+</td>
+<td style="text-align:left;">
+UNDERWOOD
+</td>
+<td style="text-align:left;">
+nonvoting
 </td>
 </tr>
 <tr>
@@ -3220,6 +3813,9 @@ FRED
 <td style="text-align:left;">
 UPTON
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3230,6 +3826,9 @@ CHRIS
 </td>
 <td style="text-align:left;">
 VAN HOLLEN
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -3242,6 +3841,9 @@ TIMOTHY
 <td style="text-align:left;">
 WALZ
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3252,6 +3854,37 @@ ZACH
 </td>
 <td style="text-align:left;">
 WAMP
+</td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Wesley
+</td>
+<td style="text-align:left;">
+WES
+</td>
+<td style="text-align:left;">
+WATKINS
+</td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Julius
+</td>
+<td style="text-align:left;">
+J.C.
+</td>
+<td style="text-align:left;">
+WATTS
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -3264,6 +3897,9 @@ JIM
 <td style="text-align:left;">
 WEBB
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3274,6 +3910,9 @@ W.
 </td>
 <td style="text-align:left;">
 WELDON
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -3286,6 +3925,9 @@ ED
 <td style="text-align:left;">
 WHITFIELD
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3296,6 +3938,9 @@ JOE
 </td>
 <td style="text-align:left;">
 WILSON
+</td>
+<td style="text-align:left;">
+voting
 </td>
 </tr>
 <tr>
@@ -3308,6 +3953,9 @@ CHARLES
 <td style="text-align:left;">
 WILSON
 </td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3319,16 +3967,8 @@ RON
 <td style="text-align:left;">
 WYDEN
 </td>
-</tr>
-<tr>
 <td style="text-align:left;">
-Charles
-</td>
-<td style="text-align:left;">
-C.
-</td>
-<td style="text-align:left;">
-YOUNG
+voting
 </td>
 </tr>
 <tr>
@@ -3341,6 +3981,23 @@ DON
 <td style="text-align:left;">
 YOUNG
 </td>
+<td style="text-align:left;">
+voting
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Charles
+</td>
+<td style="text-align:left;">
+C.
+</td>
+<td style="text-align:left;">
+YOUNG
+</td>
+<td style="text-align:left;">
+voting
+</td>
 </tr>
 </tbody>
 </table>
@@ -3349,12 +4006,7 @@ YOUNG
 </div>
 <div id="some-observations-in-the-hein-records-are-missing-district-information." class="section level3">
 <h3>Some observations in the Hein records are missing district information.</h3>
-<p>(Hereth Sandlin, Cubin, Rehberg, Young), making them fail to match.</p>
-</div>
-<div id="because-they-dont-have-voting-records-non-voting-members-are-not-in-the-voteview-data." class="section level3">
-<h3>Because they don’t have voting records, non-voting members are not in the Voteview data.</h3>
-<p>If we drop first names and districts, we match almost all voting members, but we also over-match.</p>
-<p>Mary Bono Mack also fails to match because she is just Mary Bono in Voteview.</p>
+<p>(Hereth Sandlin, Cubin, Rehberg, Young)</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a><span class="co"># mismatches </span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true"></a>speakers <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>first_name) <span class="op">%&gt;%</span></span>
@@ -3405,6 +4057,500 @@ district_code
 <tbody>
 <tr>
 <td style="text-align:right;">
+107115450
+</td>
+<td style="text-align:left;">
+CASTLE
+</td>
+<td style="text-align:left;">
+MICHAEL
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+DE
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+CASTLE
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107120680
+</td>
+<td style="text-align:left;">
+NORTON
+</td>
+<td style="text-align:left;">
+ELEANOR
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+DC
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+NORTON
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107117040
+</td>
+<td style="text-align:left;">
+REHBERG
+</td>
+<td style="text-align:left;">
+DENNIS
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+MT
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+REHBERG
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107113400
+</td>
+<td style="text-align:left;">
+UNDERWOOD
+</td>
+<td style="text-align:left;">
+ROBERT
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+GU
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+UNDERWOOD
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107117560
+</td>
+<td style="text-align:left;">
+CHRISTENSEN
+</td>
+<td style="text-align:left;">
+DONNA
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+VI
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+CHRISTENSEN
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107115960
+</td>
+<td style="text-align:left;">
+POMEROY
+</td>
+<td style="text-align:left;">
+EARL
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+ND
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+POMEROY
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107118220
+</td>
+<td style="text-align:left;">
+SANDERS
+</td>
+<td style="text-align:left;">
+BERNARD
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+VT
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+I
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+SANDERS
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107119090
+</td>
+<td style="text-align:left;">
+CRENSHAW
+</td>
+<td style="text-align:left;">
+ANDER
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+FL
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+I
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+CRENSHAW
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107121540
+</td>
+<td style="text-align:left;">
+THUNE
+</td>
+<td style="text-align:left;">
+JOHN
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+SD
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+THUNE
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107113450
+</td>
+<td style="text-align:left;">
+ACEVEDO-VILA
+</td>
+<td style="text-align:left;">
+ANIBAL
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+PR
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+ACEVEDO-VILA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107117590
+</td>
+<td style="text-align:left;">
+FALEOMAVAEGA
+</td>
+<td style="text-align:left;">
+ENI
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+AS
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+FALEOMAVAEGA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107114670
+</td>
+<td style="text-align:left;">
+CUBIN
+</td>
+<td style="text-align:left;">
+BARBARA
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+WY
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+CUBIN
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107121820
+</td>
+<td style="text-align:left;">
+YOUNG
+</td>
+<td style="text-align:left;">
+DON
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+AK
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+YOUNG
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
 108120680
 </td>
 <td style="text-align:left;">
@@ -3438,7 +4584,7 @@ nonvoting
 NORTON
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -3476,7 +4622,7 @@ voting
 CASTLE
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -3514,7 +4660,7 @@ nonvoting
 BORDALLO
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -3552,7 +4698,7 @@ nonvoting
 FALEOMAVAEGA
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -3590,7 +4736,7 @@ nonvoting
 CHRISTENSEN
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -3628,7 +4774,7 @@ voting
 REHBERG
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -3666,7 +4812,7 @@ voting
 SANDERS
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -3704,7 +4850,7 @@ nonvoting
 ACEVEDO-VILA
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -3742,7 +4888,7 @@ voting
 POMEROY
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -3780,7 +4926,7 @@ voting
 CUBIN
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -3818,7 +4964,7 @@ voting
 JANKLOW
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -3894,7 +5040,7 @@ voting
 YOUNG
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4008,7 +5154,7 @@ nonvoting
 FALEOMAVAEGA
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4046,7 +5192,7 @@ nonvoting
 NORTON
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4084,7 +5230,7 @@ nonvoting
 BORDALLO
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4160,7 +5306,7 @@ voting
 SANDERS
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4198,7 +5344,7 @@ voting
 POMEROY
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4236,7 +5382,7 @@ voting
 CASTLE
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4274,7 +5420,7 @@ voting
 REHBERG
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4312,7 +5458,7 @@ nonvoting
 FORTUNO
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4350,7 +5496,7 @@ nonvoting
 CHRISTENSEN
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4388,7 +5534,7 @@ voting
 HERSETH SANDLIN
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4426,7 +5572,7 @@ voting
 CUBIN
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4464,7 +5610,7 @@ voting
 YOUNG
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4540,7 +5686,7 @@ voting
 WELCH
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4616,7 +5762,7 @@ nonvoting
 NORTON
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4654,7 +5800,7 @@ nonvoting
 CHRISTENSEN
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4692,7 +5838,7 @@ voting
 CASTLE
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4730,7 +5876,7 @@ voting
 POMEROY
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4806,7 +5952,7 @@ nonvoting
 FORTUNO
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4844,7 +5990,7 @@ nonvoting
 BORDALLO
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4882,7 +6028,7 @@ nonvoting
 FALEOMAVAEGA
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4920,7 +6066,7 @@ voting
 HERSETH SANDLIN
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4958,7 +6104,7 @@ voting
 CUBIN
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -4996,7 +6142,7 @@ voting
 REHBERG
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -5034,7 +6180,7 @@ voting
 YOUNG
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -5072,7 +6218,7 @@ nonvoting
 BORDALLO
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -5148,7 +6294,7 @@ nonvoting
 NORTON
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -5186,7 +6332,7 @@ voting
 HERSETH SANDLIN
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -5224,7 +6370,7 @@ voting
 CASTLE
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -5262,7 +6408,7 @@ voting
 REHBERG
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -5300,7 +6446,7 @@ nonvoting
 CHRISTENSEN
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -5338,7 +6484,7 @@ voting
 POMEROY
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -5376,7 +6522,7 @@ nonvoting
 SABLAN
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -5414,7 +6560,7 @@ voting
 LUMMIS
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -5452,7 +6598,7 @@ voting
 WELCH
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -5490,7 +6636,7 @@ nonvoting
 PIERLUISI
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -5528,7 +6674,7 @@ nonvoting
 FALEOMAVAEGA
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 <tr>
@@ -5566,14 +6712,15 @@ voting
 YOUNG
 </td>
 <td style="text-align:right;">
-0
+NA
 </td>
 </tr>
 </tbody>
 </table>
 </div>
 <hr />
-<p>Without matching on first names, we get duplicate matches, e.g., André CARSON was appointed to fill the seat of his grandmother, Julia May CARSON:</p>
+<p>If we drop first names and districts, we match almost all voting members, but we also over-match.</p>
+<p>Without matching on first names, we get duplicate matches, e.g., André CARSON was appointed to fill his grandmother’s seat, Julia May CARSON:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true"></a><span class="co"># overmatches in speakers data</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true"></a>speakers <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true"></a><span class="st">  </span><span class="kw">count</span>(congress, chamber, last_name, state_abbrev, party, district) <span class="op">%&gt;%</span></span>
@@ -5839,6 +6986,46 @@ n
 </tr>
 </thead>
 <tbody>
+<tr>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+DAVIS
+</td>
+<td style="text-align:left;">
+VA
+</td>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+MILLER
+</td>
+<td style="text-align:left;">
+FL
+</td>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
 <tr>
 <td style="text-align:right;">
 108
@@ -6856,6 +8043,3598 @@ D
 </table>
 </div>
 </div>
+</div>
+<div id="fastlink" class="section level2">
+<h2>fastLink</h2>
+<p>Just for fun, we’ll give this a try, even though we have a custom solution. fastLink returns a match for voting members.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a><span class="kw">library</span>(fastLink)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true"></a>fl.out &lt;-<span class="st"> </span><span class="kw">fastLink</span>(speakers, </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true"></a>                   members, </span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true"></a>                   <span class="dt">varnames =</span> <span class="kw">c</span>(<span class="st">&quot;chamber&quot;</span>, <span class="st">&quot;state_abbrev&quot;</span>, <span class="st">&quot;party&quot;</span>, <span class="st">&quot;congress&quot;</span>, <span class="st">&quot;last_name&quot;</span>, <span class="st">&quot;first_name&quot;</span>, <span class="st">&quot;district_code&quot;</span>), <span class="dt">return.df =</span> T, <span class="dt">return.all =</span> F)</span></code></pre></div>
+<pre><code>## 
+## ==================== 
+## fastLink(): Fast Probabilistic Record Linkage
+## ==================== 
+## 
+## If you set return.all to FALSE, you will not be able to calculate a confusion table as a summary statistic.
+## Calculating matches for each variable.
+## Getting counts for parameter estimation.
+## Running the EM algorithm.
+## Getting the indices of estimated matches.
+## Deduping the estimated matches.
+## Getting the match patterns for each estimated match.</code></pre>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true"></a>speakers <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(nonvoting <span class="op">==</span><span class="st"> &quot;voting&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">nrow</span>()</span></code></pre></div>
+<pre><code>## [1] 2715</code></pre>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true"></a>fl.out<span class="op">$</span>dfA.match <span class="op">%&gt;%</span><span class="st">  </span><span class="kw">nrow</span>()</span></code></pre></div>
+<pre><code>## [1] 2715</code></pre>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true"></a>fl.out<span class="op">$</span>dfA.match <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">kablebox</span>()</span></code></pre></div>
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:400px; ">
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+speakerid
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+lastname
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+firstname
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+chamber
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+state_abbrev
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+gender
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+party
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+district
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+nonvoting
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+congress
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+last_name
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+first_name
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+district_code
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+982
+</td>
+<td style="text-align:right;">
+108115500
+</td>
+<td style="text-align:left;">
+DEAL
+</td>
+<td style="text-align:left;">
+NATHAN
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+GA
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+DEAL
+</td>
+<td style="text-align:left;">
+Nathan
+</td>
+<td style="text-align:right;">
+10
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+617
+</td>
+<td style="text-align:right;">
+108112321
+</td>
+<td style="text-align:left;">
+CAMPBELL
+</td>
+<td style="text-align:left;">
+BEN
+</td>
+<td style="text-align:left;">
+Senate
+</td>
+<td style="text-align:left;">
+CO
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+CAMPBELL
+</td>
+<td style="text-align:left;">
+Ben
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+787
+</td>
+<td style="text-align:right;">
+108117630
+</td>
+<td style="text-align:left;">
+HALL
+</td>
+<td style="text-align:left;">
+RALPH
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+TX
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+HALL
+</td>
+<td style="text-align:left;">
+Ralph
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+848
+</td>
+<td style="text-align:right;">
+108113900
+</td>
+<td style="text-align:left;">
+TAUZIN
+</td>
+<td style="text-align:left;">
+WILLIAM
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+LA
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+TAUZIN
+</td>
+<td style="text-align:left;">
+William
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+719
+</td>
+<td style="text-align:right;">
+108121351
+</td>
+<td style="text-align:left;">
+SHELBY
+</td>
+<td style="text-align:left;">
+RICHARD
+</td>
+<td style="text-align:left;">
+Senate
+</td>
+<td style="text-align:left;">
+AL
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+SHELBY
+</td>
+<td style="text-align:left;">
+Richard
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+726
+</td>
+<td style="text-align:right;">
+108113101
+</td>
+<td style="text-align:left;">
+JEFFORDS
+</td>
+<td style="text-align:left;">
+JAMES
+</td>
+<td style="text-align:left;">
+Senate
+</td>
+<td style="text-align:left;">
+VT
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+I
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+JEFFORDS
+</td>
+<td style="text-align:left;">
+James
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true"></a>fl.out<span class="op">$</span>dfB.match <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">kablebox</span>()</span></code></pre></div>
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:400px; ">
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+chamber
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+congress
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+bioname
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+pattern
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+first_name
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+first_initial
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+common_name
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+middle_name
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+middle_initial
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+maiden_name
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+last_name
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+add_last_name
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+id
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+icpsr
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+party_code
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+cqlabel
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+state
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+state_abbrev
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+bioImgURL
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+seo_name
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+district_code
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+party_name
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+nominate.dim2
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+nominate.dim1
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+nominate.geo_mean_probability
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+party_size
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+first_last
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+first_maiden
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+common_last
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+first_middle_last
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+first_initial_last
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+common_middle_last
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+last
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+last_comma_first
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+last_first
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+first_maiden_last
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+common_middle_initial_last
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+common_maiden
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+commoninitial_last
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+first_middle_initial_last
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+firstinitial_middleinitial_last
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+last_comma_initial
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+last_comma_commoninitial
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+last_comma_common
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+maiden_comma_first
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+maiden_comma_firstinitial
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+chamber_last
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+party
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+2
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+DEAL, John Nathan
+</td>
+<td style="text-align:left;">
+john deal|john nathan deal|deal|john n deal|nathan deal|nathan nathan deal|nathan n deal|deal|(^|senator |representative )dealdeal, nathan|deal, john|deal john|deal, jdeal, nrepresentative dealj n deal
+</td>
+<td style="text-align:left;">
+John
+</td>
+<td style="text-align:left;">
+J
+</td>
+<td style="text-align:left;">
+Nathan
+</td>
+<td style="text-align:left;">
+Nathan
+</td>
+<td style="text-align:left;">
+N
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+DEAL
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+MH10899342
+</td>
+<td style="text-align:right;">
+99342
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:left;">
+(GA-10)
+</td>
+<td style="text-align:left;">
+georgia
+</td>
+<td style="text-align:left;">
+GA
+</td>
+<td style="text-align:left;">
+099342.jpg
+</td>
+<td style="text-align:left;">
+john-nathan-deal
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:left;">
+Republican Party
+</td>
+<td style="text-align:right;">
+0.139
+</td>
+<td style="text-align:right;">
+0.581
+</td>
+<td style="text-align:right;">
+0.8970000000000000
+</td>
+<td style="text-align:right;">
+231
+</td>
+<td style="text-align:left;">
+John DEAL
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Nathan DEAL
+</td>
+<td style="text-align:left;">
+John Nathan DEAL
+</td>
+<td style="text-align:left;">
+DEAL
+</td>
+<td style="text-align:left;">
+Nathan Nathan DEAL
+</td>
+<td style="text-align:left;">
+(^|senator |representative )DEAL/td&gt;
+<td style="text-align:left;">
+DEAL, John
+</td>
+<td style="text-align:left;">
+DEAL John
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Nathan N DEAL
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+DEAL
+</td>
+<td style="text-align:left;">
+John N DEAL
+</td>
+<td style="text-align:left;">
+J N DEAL
+</td>
+<td style="text-align:left;">
+DEAL, J/td&gt;
+<td style="text-align:left;">
+DEAL, N/td&gt;
+<td style="text-align:left;">
+DEAL, Nathan
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Representative DEAL/td&gt;
+<td style="text-align:left;">
+R
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+3
+</td>
+<td style="text-align:left;">
+Senate
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+CAMPBELL, Ben Nighthorse
+</td>
+<td style="text-align:left;">
+ben campbell|ben nighthorse campbell|campbell|ben n campbell|benjamin campbell|benjamin nighthorse campbell|benjamin n campbell|(^|senator |representative )campbellcampbell, benjamin|campbell, ben|campbell ben|campbell, bsenator campbellb n campbell
+</td>
+<td style="text-align:left;">
+Ben
+</td>
+<td style="text-align:left;">
+B
+</td>
+<td style="text-align:left;">
+Benjamin
+</td>
+<td style="text-align:left;">
+Nighthorse
+</td>
+<td style="text-align:left;">
+N
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+CAMPBELL
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+MS10895407
+</td>
+<td style="text-align:right;">
+95407
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:left;">
+(CO)
+</td>
+<td style="text-align:left;">
+colorado
+</td>
+<td style="text-align:left;">
+CO
+</td>
+<td style="text-align:left;">
+095407.jpg
+</td>
+<td style="text-align:left;">
+ben-nighthorse-campbell
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+Republican Party
+</td>
+<td style="text-align:right;">
+0.132
+</td>
+<td style="text-align:right;">
+0.230
+</td>
+<td style="text-align:right;">
+0.8220000000000000
+</td>
+<td style="text-align:right;">
+51
+</td>
+<td style="text-align:left;">
+Ben CAMPBELL
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Benjamin CAMPBELL
+</td>
+<td style="text-align:left;">
+Ben Nighthorse CAMPBELL
+</td>
+<td style="text-align:left;">
+CAMPBELL
+</td>
+<td style="text-align:left;">
+Benjamin Nighthorse CAMPBELL
+</td>
+<td style="text-align:left;">
+(^|senator |representative )CAMPBELL/td&gt;
+<td style="text-align:left;">
+CAMPBELL, Ben
+</td>
+<td style="text-align:left;">
+CAMPBELL Ben
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Benjamin N CAMPBELL
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+CAMPBELL
+</td>
+<td style="text-align:left;">
+Ben N CAMPBELL
+</td>
+<td style="text-align:left;">
+B N CAMPBELL
+</td>
+<td style="text-align:left;">
+CAMPBELL, B/td&gt;
+<td style="text-align:left;">
+CAMPBELL, B/td&gt;
+<td style="text-align:left;">
+CAMPBELL, Benjamin
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Senator CAMPBELL/td&gt;
+<td style="text-align:left;">
+R
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+4
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+HALL, Ralph Moody
+</td>
+<td style="text-align:left;">
+ralph hall|ralph moody hall|hall|ralph m hall|hall|(^|senator |representative )hallhall, ralph|hall ralph|hall, rrepresentative hallr m hall
+</td>
+<td style="text-align:left;">
+Ralph
+</td>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+Moody
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+HALL
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+MH10894828
+</td>
+<td style="text-align:right;">
+94828
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:left;">
+(TX-04)
+</td>
+<td style="text-align:left;">
+texas
+</td>
+<td style="text-align:left;">
+TX
+</td>
+<td style="text-align:left;">
+094828.jpg
+</td>
+<td style="text-align:left;">
+ralph-moody-hall
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+Republican Party
+</td>
+<td style="text-align:right;">
+0.308
+</td>
+<td style="text-align:right;">
+0.424
+</td>
+<td style="text-align:right;">
+0.8149999999999999
+</td>
+<td style="text-align:right;">
+231
+</td>
+<td style="text-align:left;">
+Ralph HALL
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Ralph Moody HALL
+</td>
+<td style="text-align:left;">
+HALL
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+(^|senator |representative )HALL/td&gt;
+<td style="text-align:left;">
+HALL, Ralph
+</td>
+<td style="text-align:left;">
+HALL Ralph
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+HALL
+</td>
+<td style="text-align:left;">
+Ralph M HALL
+</td>
+<td style="text-align:left;">
+R M HALL
+</td>
+<td style="text-align:left;">
+HALL, R/td&gt;
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Representative HALL/td&gt;
+<td style="text-align:left;">
+R
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+TAUZIN, Wilbert Joseph (Billy)
+</td>
+<td style="text-align:left;">
+wilbert tauzin|wilbert joseph tauzin|tauzin|wilbert j tauzin|billy tauzin|billy joseph tauzin|billy j tauzin|tauzin|(^|senator |representative )tauzintauzin, billy|tauzin, wilbert|tauzin wilbert|tauzin, wtauzin, brepresentative tauzinw j tauzin
+</td>
+<td style="text-align:left;">
+Wilbert
+</td>
+<td style="text-align:left;">
+W
+</td>
+<td style="text-align:left;">
+Billy
+</td>
+<td style="text-align:left;">
+Joseph
+</td>
+<td style="text-align:left;">
+J
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+TAUZIN
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+MH10894679
+</td>
+<td style="text-align:right;">
+94679
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:left;">
+(LA-03)
+</td>
+<td style="text-align:left;">
+louisiana
+</td>
+<td style="text-align:left;">
+LA
+</td>
+<td style="text-align:left;">
+094679.jpg
+</td>
+<td style="text-align:left;">
+wilbert-joseph-billy-tauzin
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+Republican Party
+</td>
+<td style="text-align:right;">
+0.160
+</td>
+<td style="text-align:right;">
+0.341
+</td>
+<td style="text-align:right;">
+0.9100000000000000
+</td>
+<td style="text-align:right;">
+231
+</td>
+<td style="text-align:left;">
+Wilbert TAUZIN
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Billy TAUZIN
+</td>
+<td style="text-align:left;">
+Wilbert Joseph TAUZIN
+</td>
+<td style="text-align:left;">
+TAUZIN
+</td>
+<td style="text-align:left;">
+Billy Joseph TAUZIN
+</td>
+<td style="text-align:left;">
+(^|senator |representative )TAUZIN/td&gt;
+<td style="text-align:left;">
+TAUZIN, Wilbert
+</td>
+<td style="text-align:left;">
+TAUZIN Wilbert
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Billy J TAUZIN
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+TAUZIN
+</td>
+<td style="text-align:left;">
+Wilbert J TAUZIN
+</td>
+<td style="text-align:left;">
+W J TAUZIN
+</td>
+<td style="text-align:left;">
+TAUZIN, W/td&gt;
+<td style="text-align:left;">
+TAUZIN, B/td&gt;
+<td style="text-align:left;">
+TAUZIN, Billy
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Representative TAUZIN/td&gt;
+<td style="text-align:left;">
+R
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+6
+</td>
+<td style="text-align:left;">
+Senate
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+SHELBY, Richard C.
+</td>
+<td style="text-align:left;">
+richard shelby|richard c shelby|shelby|rich shelby|rich c shelby|(^|senator |representative )shelbyshelby, rich|shelby, richard|shelby richard|shelby, rsenator shelbyr c shelby
+</td>
+<td style="text-align:left;">
+Richard
+</td>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:left;">
+Rich
+</td>
+<td style="text-align:left;">
+C
+</td>
+<td style="text-align:left;">
+C
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+SHELBY
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+MS10894659
+</td>
+<td style="text-align:right;">
+94659
+</td>
+<td style="text-align:right;">
+200
+</td>
+<td style="text-align:left;">
+(AL)
+</td>
+<td style="text-align:left;">
+alabama
+</td>
+<td style="text-align:left;">
+AL
+</td>
+<td style="text-align:left;">
+094659.jpg
+</td>
+<td style="text-align:left;">
+richard-c-shelby
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+Republican Party
+</td>
+<td style="text-align:right;">
+0.520
+</td>
+<td style="text-align:right;">
+0.429
+</td>
+<td style="text-align:right;">
+0.8766256675360421
+</td>
+<td style="text-align:right;">
+51
+</td>
+<td style="text-align:left;">
+Richard SHELBY
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Rich SHELBY
+</td>
+<td style="text-align:left;">
+Richard C SHELBY
+</td>
+<td style="text-align:left;">
+SHELBY
+</td>
+<td style="text-align:left;">
+Rich C SHELBY
+</td>
+<td style="text-align:left;">
+(^|senator |representative )SHELBY/td&gt;
+<td style="text-align:left;">
+SHELBY, Richard
+</td>
+<td style="text-align:left;">
+SHELBY Richard
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Rich C SHELBY
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+SHELBY
+</td>
+<td style="text-align:left;">
+Richard C SHELBY
+</td>
+<td style="text-align:left;">
+R C SHELBY
+</td>
+<td style="text-align:left;">
+SHELBY, R/td&gt;
+<td style="text-align:left;">
+SHELBY, R/td&gt;
+<td style="text-align:left;">
+SHELBY, Rich
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Senator SHELBY/td&gt;
+<td style="text-align:left;">
+R
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+7
+</td>
+<td style="text-align:left;">
+Senate
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+JEFFORDS, James Merrill
+</td>
+<td style="text-align:left;">
+james jeffords|james merrill jeffords|jeffords|james m jeffords|jim jeffords|jim merrill jeffords|jim m jeffords|(^|senator |representative )jeffordsjeffords, jim|jeffords, james|jeffords james|jeffords, jsenator jeffordsj m jeffords
+</td>
+<td style="text-align:left;">
+James
+</td>
+<td style="text-align:left;">
+J
+</td>
+<td style="text-align:left;">
+Jim
+</td>
+<td style="text-align:left;">
+Merrill
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+JEFFORDS
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+MS10894240
+</td>
+<td style="text-align:right;">
+94240
+</td>
+<td style="text-align:right;">
+328
+</td>
+<td style="text-align:left;">
+(VT)
+</td>
+<td style="text-align:left;">
+vermont
+</td>
+<td style="text-align:left;">
+VT
+</td>
+<td style="text-align:left;">
+094240.jpg
+</td>
+<td style="text-align:left;">
+james-merrill-jeffords
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+Independent
+</td>
+<td style="text-align:right;">
+-0.603
+</td>
+<td style="text-align:right;">
+-0.277
+</td>
+<td style="text-align:right;">
+0.7340000000000000
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+James JEFFORDS
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Jim JEFFORDS
+</td>
+<td style="text-align:left;">
+James Merrill JEFFORDS
+</td>
+<td style="text-align:left;">
+JEFFORDS
+</td>
+<td style="text-align:left;">
+Jim Merrill JEFFORDS
+</td>
+<td style="text-align:left;">
+(^|senator |representative )JEFFORDS/td&gt;
+<td style="text-align:left;">
+JEFFORDS, James
+</td>
+<td style="text-align:left;">
+JEFFORDS James
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Jim M JEFFORDS
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+JEFFORDS
+</td>
+<td style="text-align:left;">
+James M JEFFORDS
+</td>
+<td style="text-align:left;">
+J M JEFFORDS
+</td>
+<td style="text-align:left;">
+JEFFORDS, J/td&gt;
+<td style="text-align:left;">
+JEFFORDS, J/td&gt;
+<td style="text-align:left;">
+JEFFORDS, Jim
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+404error
+</td>
+<td style="text-align:left;">
+Senator JEFFORDS/td&gt;
+<td style="text-align:left;">
+I
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true"></a>fl.speakers &lt;-<span class="st"> </span>fl.out<span class="op">$</span>dfA.match <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">icpsr =</span> fl.out<span class="op">$</span>dfB.match<span class="op">$</span>icpsr,</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true"></a>         <span class="dt">bioname =</span> fl.out<span class="op">$</span>dfB.match<span class="op">$</span>bioname,</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true"></a>         <span class="dt">party_name =</span> fl.out<span class="op">$</span>dfB.match<span class="op">$</span>party_name,</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true"></a>         <span class="dt">district_code_voteview =</span> fl.out<span class="op">$</span>dfB.match<span class="op">$</span>district_code) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true"></a><span class="st">  </span><span class="kw">full_join</span>(speakers)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true"></a><span class="co"># failed matches</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true"></a>fl.speakers <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="kw">is.na</span>(icpsr)) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">kablebox</span>()</span></code></pre></div>
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:400px; ">
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+speakerid
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+lastname
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+firstname
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+chamber
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+state_abbrev
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+gender
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+party
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+district
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+nonvoting
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+congress
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+last_name
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+first_name
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+district_code
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+icpsr
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+bioname
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+party_name
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+district_code_voteview
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+107120680
+</td>
+<td style="text-align:left;">
+NORTON
+</td>
+<td style="text-align:left;">
+ELEANOR
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+DC
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+NORTON
+</td>
+<td style="text-align:left;">
+Eleanor
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107113400
+</td>
+<td style="text-align:left;">
+UNDERWOOD
+</td>
+<td style="text-align:left;">
+ROBERT
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+GU
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+UNDERWOOD
+</td>
+<td style="text-align:left;">
+Robert
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107117560
+</td>
+<td style="text-align:left;">
+CHRISTENSEN
+</td>
+<td style="text-align:left;">
+DONNA
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+VI
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+CHRISTENSEN
+</td>
+<td style="text-align:left;">
+Donna
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107113450
+</td>
+<td style="text-align:left;">
+ACEVEDO-VILA
+</td>
+<td style="text-align:left;">
+ANIBAL
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+PR
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+ACEVEDO-VILA
+</td>
+<td style="text-align:left;">
+Anibal
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+107117590
+</td>
+<td style="text-align:left;">
+FALEOMAVAEGA
+</td>
+<td style="text-align:left;">
+ENI
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+AS
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+FALEOMAVAEGA
+</td>
+<td style="text-align:left;">
+Eni
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+108120680
+</td>
+<td style="text-align:left;">
+NORTON
+</td>
+<td style="text-align:left;">
+ELEANOR
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+DC
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+NORTON
+</td>
+<td style="text-align:left;">
+Eleanor
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+108118680
+</td>
+<td style="text-align:left;">
+BORDALLO
+</td>
+<td style="text-align:left;">
+MADELEINE
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+GU
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+BORDALLO
+</td>
+<td style="text-align:left;">
+Madeleine
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+108117590
+</td>
+<td style="text-align:left;">
+FALEOMAVAEGA
+</td>
+<td style="text-align:left;">
+ENI
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+AS
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+FALEOMAVAEGA
+</td>
+<td style="text-align:left;">
+Eni
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+108117560
+</td>
+<td style="text-align:left;">
+CHRISTENSEN
+</td>
+<td style="text-align:left;">
+DONNA
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+VI
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+CHRISTENSEN
+</td>
+<td style="text-align:left;">
+Donna
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+108113450
+</td>
+<td style="text-align:left;">
+ACEVEDO-VILA
+</td>
+<td style="text-align:left;">
+ANIBAL
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+PR
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+P
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+ACEVEDO-VILA
+</td>
+<td style="text-align:left;">
+Anibal
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+109117590
+</td>
+<td style="text-align:left;">
+FALEOMAVAEGA
+</td>
+<td style="text-align:left;">
+ENI
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+AS
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+109
+</td>
+<td style="text-align:left;">
+FALEOMAVAEGA
+</td>
+<td style="text-align:left;">
+Eni
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+109120680
+</td>
+<td style="text-align:left;">
+NORTON
+</td>
+<td style="text-align:left;">
+ELEANOR
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+DC
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+109
+</td>
+<td style="text-align:left;">
+NORTON
+</td>
+<td style="text-align:left;">
+Eleanor
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+109118680
+</td>
+<td style="text-align:left;">
+BORDALLO
+</td>
+<td style="text-align:left;">
+MADELEINE
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+GU
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+109
+</td>
+<td style="text-align:left;">
+BORDALLO
+</td>
+<td style="text-align:left;">
+Madeleine
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+109114790
+</td>
+<td style="text-align:left;">
+FORTUNO
+</td>
+<td style="text-align:left;">
+LUIS
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+PR
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+109
+</td>
+<td style="text-align:left;">
+FORTUNO
+</td>
+<td style="text-align:left;">
+Luis
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+109117560
+</td>
+<td style="text-align:left;">
+CHRISTENSEN
+</td>
+<td style="text-align:left;">
+DONNA
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+VI
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+109
+</td>
+<td style="text-align:left;">
+CHRISTENSEN
+</td>
+<td style="text-align:left;">
+Donna
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+110120680
+</td>
+<td style="text-align:left;">
+NORTON
+</td>
+<td style="text-align:left;">
+ELEANOR
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+DC
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+110
+</td>
+<td style="text-align:left;">
+NORTON
+</td>
+<td style="text-align:left;">
+Eleanor
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+110117560
+</td>
+<td style="text-align:left;">
+CHRISTENSEN
+</td>
+<td style="text-align:left;">
+DONNA
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+VI
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+110
+</td>
+<td style="text-align:left;">
+CHRISTENSEN
+</td>
+<td style="text-align:left;">
+Donna
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+110114790
+</td>
+<td style="text-align:left;">
+FORTUNO
+</td>
+<td style="text-align:left;">
+LUIS
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+PR
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+110
+</td>
+<td style="text-align:left;">
+FORTUNO
+</td>
+<td style="text-align:left;">
+Luis
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+110118680
+</td>
+<td style="text-align:left;">
+BORDALLO
+</td>
+<td style="text-align:left;">
+MADELEINE
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+GU
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+110
+</td>
+<td style="text-align:left;">
+BORDALLO
+</td>
+<td style="text-align:left;">
+Madeleine
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+110117590
+</td>
+<td style="text-align:left;">
+FALEOMAVAEGA
+</td>
+<td style="text-align:left;">
+ENI
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+AS
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+110
+</td>
+<td style="text-align:left;">
+FALEOMAVAEGA
+</td>
+<td style="text-align:left;">
+Eni
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+111118680
+</td>
+<td style="text-align:left;">
+BORDALLO
+</td>
+<td style="text-align:left;">
+MADELEINE
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+GU
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+111
+</td>
+<td style="text-align:left;">
+BORDALLO
+</td>
+<td style="text-align:left;">
+Madeleine
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+111120680
+</td>
+<td style="text-align:left;">
+NORTON
+</td>
+<td style="text-align:left;">
+ELEANOR
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+DC
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+111
+</td>
+<td style="text-align:left;">
+NORTON
+</td>
+<td style="text-align:left;">
+Eleanor
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+111117560
+</td>
+<td style="text-align:left;">
+CHRISTENSEN
+</td>
+<td style="text-align:left;">
+DONNA
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+VI
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+111
+</td>
+<td style="text-align:left;">
+CHRISTENSEN
+</td>
+<td style="text-align:left;">
+Donna
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+111121180
+</td>
+<td style="text-align:left;">
+SABLAN
+</td>
+<td style="text-align:left;">
+GREGORIO
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+MP
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+111
+</td>
+<td style="text-align:left;">
+SABLAN
+</td>
+<td style="text-align:left;">
+Gregorio
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+111120820
+</td>
+<td style="text-align:left;">
+PIERLUISI
+</td>
+<td style="text-align:left;">
+PEDRO
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+PR
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+111
+</td>
+<td style="text-align:left;">
+PIERLUISI
+</td>
+<td style="text-align:left;">
+Pedro
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+111117590
+</td>
+<td style="text-align:left;">
+FALEOMAVAEGA
+</td>
+<td style="text-align:left;">
+ENI
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+AS
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+nonvoting
+</td>
+<td style="text-align:right;">
+111
+</td>
+<td style="text-align:left;">
+FALEOMAVAEGA
+</td>
+<td style="text-align:left;">
+Eni
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true"></a><span class="co"># party mismatches </span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true"></a>fl.speakers <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(party <span class="op">!=</span><span class="st"> </span>party_name <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">str_sub</span>(<span class="dv">1</span>, <span class="dv">1</span>)) <span class="op">%&gt;%</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true"></a><span class="st">  </span><span class="kw">select</span>(party, party_name, <span class="kw">everything</span>()) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true"></a><span class="st">  </span><span class="kw">kablebox</span>()</span></code></pre></div>
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:400px; ">
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+party
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+party_name
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+speakerid
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+lastname
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+firstname
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+chamber
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+state_abbrev
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+gender
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+district
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+nonvoting
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+congress
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+last_name
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+first_name
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+district_code
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+icpsr
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+bioname
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+district_code_voteview
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:left;">
+Democratic Party
+</td>
+<td style="text-align:right;">
+108117300
+</td>
+<td style="text-align:left;">
+ALEXANDER
+</td>
+<td style="text-align:left;">
+RODNEY
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+LA
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+ALEXANDER
+</td>
+<td style="text-align:left;">
+Rodney
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+20327
+</td>
+<td style="text-align:left;">
+ALEXANDER, Rodney
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+I
+</td>
+<td style="text-align:left;">
+Republican Party
+</td>
+<td style="text-align:right;">
+107119090
+</td>
+<td style="text-align:left;">
+CRENSHAW
+</td>
+<td style="text-align:left;">
+ANDER
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+FL
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+CRENSHAW
+</td>
+<td style="text-align:left;">
+Ander
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+20111
+</td>
+<td style="text-align:left;">
+CRENSHAW, Ander
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+I
+</td>
+<td style="text-align:left;">
+Democratic Party
+</td>
+<td style="text-align:right;">
+111116471
+</td>
+<td style="text-align:left;">
+LIEBERMAN
+</td>
+<td style="text-align:left;">
+JOSEPH
+</td>
+<td style="text-align:left;">
+Senate
+</td>
+<td style="text-align:left;">
+CT
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+111
+</td>
+<td style="text-align:left;">
+LIEBERMAN
+</td>
+<td style="text-align:left;">
+Joseph
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+15704
+</td>
+<td style="text-align:left;">
+LIEBERMAN, Joseph I.
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+I
+</td>
+<td style="text-align:left;">
+Democratic Party
+</td>
+<td style="text-align:right;">
+110116471
+</td>
+<td style="text-align:left;">
+LIEBERMAN
+</td>
+<td style="text-align:left;">
+JOSEPH
+</td>
+<td style="text-align:left;">
+Senate
+</td>
+<td style="text-align:left;">
+CT
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+110
+</td>
+<td style="text-align:left;">
+LIEBERMAN
+</td>
+<td style="text-align:left;">
+Joseph
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+15704
+</td>
+<td style="text-align:left;">
+LIEBERMAN, Joseph I.
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:left;">
+Republican Party
+</td>
+<td style="text-align:right;">
+110114511
+</td>
+<td style="text-align:left;">
+SPECTER
+</td>
+<td style="text-align:left;">
+ARLEN
+</td>
+<td style="text-align:left;">
+Senate
+</td>
+<td style="text-align:left;">
+PA
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+110
+</td>
+<td style="text-align:left;">
+SPECTER
+</td>
+<td style="text-align:left;">
+Arlen
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+14910
+</td>
+<td style="text-align:left;">
+SPECTER, Arlen
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:left;">
+Republican Party
+</td>
+<td style="text-align:right;">
+109114511
+</td>
+<td style="text-align:left;">
+SPECTER
+</td>
+<td style="text-align:left;">
+ARLEN
+</td>
+<td style="text-align:left;">
+Senate
+</td>
+<td style="text-align:left;">
+PA
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+109
+</td>
+<td style="text-align:left;">
+SPECTER
+</td>
+<td style="text-align:left;">
+Arlen
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+14910
+</td>
+<td style="text-align:left;">
+SPECTER, Arlen
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true"></a><span class="co"># district mismatches </span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true"></a><span class="co"># fl.speakers %&gt;% filter(district_code != district_code_voteview) %&gt;% kablebox()</span></span></code></pre></div>
+</div>
+<div id="custom-name-matching-function" class="section level2">
+<h2>Custom name matching function</h2>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true"></a><span class="co"># start with fresh data (can eventually delete everything above up to map function if we use this method)</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true"></a><span class="co"># speakers dataframe</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true"></a>speakers &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(speakermaps<span class="op">$</span>file, get_speakers)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true"></a><span class="co"># match to voteview format </span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true"></a>speakers <span class="op">%&lt;&gt;%</span><span class="st"> </span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">congress =</span> congress <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">str_remove</span>(<span class="st">&quot;^0&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">as.numeric</span>(),</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true"></a>         <span class="dt">chamber =</span> chamber <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true"></a><span class="st">           </span><span class="kw">str_replace</span>(<span class="st">&quot;S$&quot;</span>, <span class="st">&quot;Senate&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true"></a><span class="st">           </span><span class="kw">str_replace</span>(<span class="st">&quot;H$&quot;</span>, <span class="st">&quot;House&quot;</span>),</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true"></a>         <span class="dt">district =</span> <span class="kw">ifelse</span>(chamber <span class="op">==</span><span class="st"> &quot;Senate&quot;</span>, <span class="dv">0</span>, district),</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true"></a>         <span class="co"># clean up some 0s that are actually missing data </span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true"></a>         <span class="dt">district =</span>  <span class="kw">ifelse</span>(chamber <span class="op">==</span><span class="st"> &quot;House&quot;</span> <span class="op">&amp;</span><span class="st"> </span>district <span class="op">==</span><span class="st"> &quot;0&quot;</span>, <span class="ot">NA</span>, district) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true"></a><span class="st">           </span><span class="kw">as.numeric</span>() </span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true"></a>         ) </span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true"></a></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true"></a>speakers <span class="op">%&lt;&gt;%</span><span class="st"> </span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true"></a><span class="st">  </span><span class="kw">rename</span>(<span class="dt">state_abbrev =</span> state)</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true"></a></span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true"></a><span class="co"># </span><span class="al">FIXME</span><span class="co"> focusing on the 107-111th for now </span></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true"></a>speakers <span class="op">%&lt;&gt;%</span><span class="st"> </span></span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true"></a><span class="st">  </span><span class="kw">filter</span>(congress <span class="op">&gt;</span><span class="st"> </span><span class="dv">106</span>)</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true"></a></span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true"></a>speakers <span class="op">%&lt;&gt;%</span><span class="st"> </span></span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true"></a><span class="st">  </span><span class="co"># combine information into one field</span></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">speaker =</span> <span class="kw">paste</span>(chamber, firstname, lastname, state_abbrev) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true"></a><span class="st">           </span><span class="kw">str_replace</span>(<span class="st">&quot;Senate&quot;</span>, <span class="st">&quot;Senator&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true"></a><span class="st">           </span><span class="kw">str_replace</span>(<span class="st">&quot;House&quot;</span>, <span class="st">&quot;Representative&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true"></a><span class="st">           </span><span class="kw">str_replace</span>(<span class="st">&quot;Representative R</span><span class="ch">\\</span><span class="st">.&quot;</span>, <span class="st">&quot;Representative&quot;</span>))</span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true"></a></span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true"></a><span class="co"># name matching function </span></span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true"></a><span class="kw">source</span>(<span class="kw">here</span>(<span class="st">&quot;code&quot;</span>, <span class="st">&quot;nameMethods.R&quot;</span>))</span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true"></a></span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true"></a><span class="co"># typos in these data include &quot;WM&quot; instead of &quot;William&quot; and &quot;R. Miller&quot; for &quot;Representative Brad Miller&quot;, the rest are known permutations and nicknames </span></span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true"></a><span class="kw">source</span>(<span class="kw">here</span>(<span class="st">&quot;code&quot;</span>, <span class="st">&quot;MemberNameTypos.R&quot;</span>))</span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true"></a></span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true"></a>speakers1 &lt;-<span class="st"> </span>speakers <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">extractMemberName</span>(<span class="dt">col_name =</span> <span class="st">&quot;speaker&quot;</span>, <span class="dt">members =</span> members)</span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true"></a></span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true"></a><span class="co"># </span><span class="al">FIXME</span><span class="co">, overmatches party switchers (and maybe others)</span></span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true"></a>crosswalk &lt;-<span class="st"> </span>speakers1 <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true"></a><span class="st">  </span><span class="kw">select</span>(speaker, speakerid, icpsr, bioname, congress, chamber, nonvoting) <span class="op">%&gt;%</span></span>
+<span id="cb19-43"><a href="#cb19-43" aria-hidden="true"></a><span class="st">  </span><span class="kw">distinct</span>()  <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-44"><a href="#cb19-44" aria-hidden="true"></a><span class="st">  </span><span class="kw">left_join</span>(members <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb19-45"><a href="#cb19-45" aria-hidden="true"></a><span class="st">              </span><span class="kw">select</span>(icpsr, congress, chamber, state_abbrev, party_name, district_code)) <span class="op">%&gt;%</span></span>
+<span id="cb19-46"><a href="#cb19-46" aria-hidden="true"></a><span class="st">  </span><span class="kw">distinct</span>()</span></code></pre></div>
+<div id="failed-to-match-with-voteview-on-name-chamber-state" class="section level3">
+<h3>Failed to match with voteview on name, chamber, state</h3>
+<p>My congressional name search function gets us 100% matches when we don’t use party information, but party-switchers get an ICPSR for both parties. When we match on party, we find that some party info in the speakers data are incorrect.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true"></a><span class="co"># failed to match in crosswalk</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true"></a>crosswalk <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="kw">is.na</span>(icpsr) <span class="op">&amp;</span><span class="st"> </span>nonvoting <span class="op">==</span><span class="st"> &quot;voting&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true"></a><span class="st">  </span><span class="kw">kablebox</span>()</span></code></pre></div>
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:400px; ">
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+speaker
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+speakerid
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+icpsr
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+bioname
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+congress
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+chamber
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+nonvoting
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+state_abbrev
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+party_name
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+district_code
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="failed-to-match-when-including-party" class="section level3">
+<h3>Failed to match when including party</h3>
+<p>Missing district data in the speakers data is fine; we can fill it in from voteview.</p>
+<p>I have not yet found incorrect districts, but these would cause this to fail (and rightly so, getting the district right is important!).</p>
+<p>However, the speakers data has a few incorrect parties. -Crenshaw was never an independent -alexander was a D in the 108th -specter switched in 2009 (11th), he was not a D in the 109 or 110 -Lieberman called himself an “independent Democrat” and caucused with the Ds, so he is only a D in voteview</p>
+<p>These can be corrected, or we can use those from voteview if we decided to go with their first party or modal party. There are likely more instances in the speakers data where their party is coded inconsistently with either principle.</p>
+<p>This result is identical to fastLink.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true"></a><span class="co"># failed to match in data </span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true"></a>test &lt;-<span class="st"> </span>speakers <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true"></a><span class="st">  </span><span class="kw">left_join</span>(crosswalk) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true"></a><span class="st">  </span><span class="kw">left_join</span>(members <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(icpsr, chamber, congress, state_abbrev, party_name, district_code) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">distinct</span>()) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true"></a><span class="st">  </span><span class="co"># require district match where there is district data in speaker data</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true"></a><span class="st">  </span><span class="kw">filter</span>((district <span class="op">==</span><span class="st"> </span>district_code <span class="op">|</span><span class="st"> </span><span class="kw">is.na</span>(district) ) ) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true"></a><span class="st">  </span><span class="co"># drop party switchers</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true"></a><span class="st">  </span><span class="kw">filter</span>(party <span class="op">==</span><span class="st"> </span><span class="kw">str_sub</span>(party_name, <span class="dv">1</span>,<span class="dv">1</span>) <span class="op">|</span><span class="st"> </span><span class="kw">is.na</span>(party_name)) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true"></a><span class="st">  </span><span class="kw">distinct</span>()</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true"></a></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true"></a></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true"></a></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true"></a>speakers <span class="op">%&gt;%</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true"></a><span class="st">  </span><span class="kw">anti_join</span>(test) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true"></a><span class="st">  </span><span class="kw">select</span>(party, <span class="kw">everything</span>()) <span class="op">%&gt;%</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true"></a><span class="st">  </span><span class="kw">kablebox</span>()</span></code></pre></div>
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:400px; ">
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+party
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+speakerid
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+lastname
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+firstname
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+chamber
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+state_abbrev
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+gender
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+district
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+nonvoting
+</th>
+<th style="text-align:right;position: sticky; top:0; background-color: #FFFFFF;">
+congress
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+speaker
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+I
+</td>
+<td style="text-align:right;">
+107119090
+</td>
+<td style="text-align:left;">
+CRENSHAW
+</td>
+<td style="text-align:left;">
+ANDER
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+FL
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+107
+</td>
+<td style="text-align:left;">
+Representative ANDER CRENSHAW FL
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+R
+</td>
+<td style="text-align:right;">
+108117300
+</td>
+<td style="text-align:left;">
+ALEXANDER
+</td>
+<td style="text-align:left;">
+RODNEY
+</td>
+<td style="text-align:left;">
+House
+</td>
+<td style="text-align:left;">
+LA
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+108
+</td>
+<td style="text-align:left;">
+Representative RODNEY ALEXANDER LA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+109114511
+</td>
+<td style="text-align:left;">
+SPECTER
+</td>
+<td style="text-align:left;">
+ARLEN
+</td>
+<td style="text-align:left;">
+Senate
+</td>
+<td style="text-align:left;">
+PA
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+109
+</td>
+<td style="text-align:left;">
+Senator ARLEN SPECTER PA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+110114511
+</td>
+<td style="text-align:left;">
+SPECTER
+</td>
+<td style="text-align:left;">
+ARLEN
+</td>
+<td style="text-align:left;">
+Senate
+</td>
+<td style="text-align:left;">
+PA
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+110
+</td>
+<td style="text-align:left;">
+Senator ARLEN SPECTER PA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+I
+</td>
+<td style="text-align:right;">
+110116471
+</td>
+<td style="text-align:left;">
+LIEBERMAN
+</td>
+<td style="text-align:left;">
+JOSEPH
+</td>
+<td style="text-align:left;">
+Senate
+</td>
+<td style="text-align:left;">
+CT
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+110
+</td>
+<td style="text-align:left;">
+Senator JOSEPH LIEBERMAN CT
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+I
+</td>
+<td style="text-align:right;">
+111116471
+</td>
+<td style="text-align:left;">
+LIEBERMAN
+</td>
+<td style="text-align:left;">
+JOSEPH
+</td>
+<td style="text-align:left;">
+Senate
+</td>
+<td style="text-align:left;">
+CT
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+voting
+</td>
+<td style="text-align:right;">
+111
+</td>
+<td style="text-align:left;">
+Senator JOSEPH LIEBERMAN CT
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div id="questions" class="section level1">
+<h1>Questions</h1>
+<ul>
+<li>should I correct speakers data party by hand or replace it in a principled way with with voteview? (not a big deal either way). I suggest going with voteview, and picking D or R over I when unknown. This depends on how important it is to keep this party in this dataset perfectly consistant with the speakers data, which does not seem important.</li>
+</ul>
+</div>
+<div id="notes" class="section level1">
+<h1>Notes</h1>
+<div id="todo" class="section level2">
+<h2>TODO</h2>
+<ul>
+<li>we are ignoring incorrect parties (and thus ICPSRs) assigned to party-switchers for now. Eventually, we will need to look up the first speech that a switcher made and re-code their party for speeches after that (assuming that party for the speach data was assigned based on their party at the beginning of the congress).</li>
+</ul>
 </div>
 </div>
 

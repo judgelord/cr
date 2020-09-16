@@ -1,0 +1,29 @@
+ Congress API (contains floor actions but not speech text)
+KEY: uup0O0Rsyr9TdfT9axHuUzXOI6EhpThf2pCgQZh1
+https://projects.propublica.org/api-docs/congress-api/other/#get-recent-house-and-senate-floor-actions
+
+Info about headings etc
+https://www.congress.gov/congressional-record/about
+
+a good spider.py but not a parser
+https://github.com/johnmarcampbell/concord
+
+ICPSR data? and scraper?
+https://drive.google.com/drive/folders/0B-r6GnS3c68uaFlYY0k1VkRfSHc
+
+
+-----------------------------------------------
+less helpful:
+-----------------------------------------------
+
+cr scraper (ish)
+https://towardsdatascience.com/political-python-1e8eb46c1bc1
+
+an older java scraper that claims to get policy speeches
+https://github.com/jamiesonbates/congressional-record
+
+scraper with html.parser and BeautifulSoup, but the parser is for meetings
+https://github.com/ACTtaiwan/congressional-record-service/blob/master/next-meetings-parser.py
+
+non-cr beautiful soup tutorial 
+https://www.dataschool.io/python-web-scraping-of-president-trumps-lies/

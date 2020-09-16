@@ -34,6 +34,7 @@ library(tidytext)
 library(knitr)
 library(kableExtra)
 library(here)
+library(crayon)
 
 library(ggplot2); theme_set(theme_bw())
   options(
@@ -61,7 +62,7 @@ get_speakers <- function(file){
   message(file)
   
   read_delim(str_c(here("hein-bound/", file) %>% str_remove("/cr") ),
-           delim = "|") %>% 
+             delim = "|") %>% 
   # drop speech data for now
   select(-speech_id) %>% 
   # extract congress from file name
@@ -80,8 +81,7 @@ speakermaps <- heinbound %>%
          )
 
 # speakers dataframe
-speakers <- map_dfr(speakermaps$file,
-        get_speakers)
+speakers <- map_dfr(speakermaps$file, get_speakers)
 
 # match to voteview format 
 speakers %<>% 
@@ -91,7 +91,10 @@ speakers %<>%
          chamber = chamber %>% 
            str_replace("S$", "Senate") %>% 
            str_replace("H$", "House"),
-         district_code = ifelse(chamber == "Senate", 0, district) %>% as.numeric()
+         district_code = ifelse(chamber == "Senate", 0, district),
+         # clean up some 0s that are actually missing data 
+         district_code =  ifelse(chamber == "House" & district_code == "0", NA, district_code) %>% 
+           as.numeric() 
          ) 
 
 speakers %<>% 
@@ -99,19 +102,24 @@ speakers %<>%
 
 # FIXME focusing on the 107-111th for now 
 speakers %<>% 
-  filter(congress > 107) 
+  filter(congress > 106)
+
 
 # Devin's members data (expanded from voteview)
 load(here("data", "members.Rdata"))
 # members %>% select(names(members)[names(members) %in% names(speakers)])
 
-# Make mixed case names, like "McConnell" upper (to go the other way, we would need to fix them one by one)
+# Make mixed case names, like "McConnell" upper case (to go the other way, we would need to fix them one by one)
 members %<>% 
   mutate(last_name = str_to_upper(last_name),
          party = str_sub(party_name, 1, 1))
 ```
 
-### Unfortunately, first names not consistent across datasets. 
+### Unfortunately, first names are not consistent across datasets. 
+
+### Because they don't have voting records, non-voting members are not in the Voteview data.
+
+A few last names also differ, e.g. Mary Bono Mack also fails to match because she is just Mary Bono in Voteview. 
 
 ```{r}
 speakers %>% 
@@ -121,7 +129,7 @@ speakers %>%
   left_join(members) %>% 
   select(voteview_first_name = first_name,
          speakermap_firstname = firstname, 
-         lastname) %>% 
+         lastname, nonvoting) %>% 
   distinct() %>% 
   arrange(lastname) %>% kablebox()
 ```
@@ -131,13 +139,12 @@ speakers %>%
 
 ### Some observations in the Hein records are missing district information.
 
-(Hereth Sandlin, Cubin, Rehberg, Young), making them fail to match.
+(Hereth Sandlin, Cubin, Rehberg, Young)
 
-### Because they don't have voting records, non-voting members are not in the Voteview data. 
 
-If we drop first names and districts, we match almost all voting members, but we also over-match.
 
-Mary Bono Mack also fails to match because she is just Mary Bono in Voteview. 
+
+
 
 ```{r}
 # mismatches 
@@ -149,7 +156,9 @@ speakers %>%
 
 ---
 
-Without matching on first names, we get duplicate matches, e.g., André CARSON was appointed to fill the seat of his grandmother, Julia May CARSON:
+If we drop first names and districts, we match almost all voting members, but we also over-match.
+
+Without matching on first names, we get duplicate matches, e.g., André CARSON was appointed to fill his grandmother's seat, Julia May CARSON:
 
 ```{r}
 # overmatches in speakers data
@@ -183,3 +192,145 @@ members %>%
   kablebox()
 ```
 
+## fastLink
+
+Just for fun, we'll give this a try, even though we have a custom solution. fastLink returns a match for voting members.
+
+```{r}
+library(fastLink)
+
+fl.out <- fastLink(speakers, 
+                   members, 
+                   varnames = c("chamber", "state_abbrev", "party", "congress", "last_name", "first_name", "district_code"), return.df = T, return.all = F)
+
+speakers %>% filter(nonvoting == "voting") %>% nrow()
+fl.out$dfA.match %>%  nrow()
+fl.out$dfA.match %>% head() %>% kablebox()
+fl.out$dfB.match %>% head() %>% kablebox()
+
+fl.speakers <- fl.out$dfA.match %>% 
+  mutate(icpsr = fl.out$dfB.match$icpsr,
+         bioname = fl.out$dfB.match$bioname,
+         party_name = fl.out$dfB.match$party_name,
+         district_code_voteview = fl.out$dfB.match$district_code) %>% 
+  full_join(speakers)
+
+# failed matches
+fl.speakers %>% filter(is.na(icpsr)) %>% kablebox()
+
+# party mismatches 
+fl.speakers %>% filter(party != party_name %>% str_sub(1, 1)) %>%
+  select(party, party_name, everything()) %>% 
+  kablebox()
+
+# district mismatches 
+# fl.speakers %>% filter(district_code != district_code_voteview) %>% kablebox()
+```
+
+## Custom name matching function
+
+```{r}
+# start with fresh data (can eventually delete everything above up to map function if we use this method)
+
+# speakers dataframe
+speakers <- map_dfr(speakermaps$file, get_speakers)
+
+# match to voteview format 
+speakers %<>% 
+  mutate(congress = congress %>% str_remove("^0") %>% as.numeric(),
+         chamber = chamber %>% 
+           str_replace("S$", "Senate") %>% 
+           str_replace("H$", "House"),
+         district = ifelse(chamber == "Senate", 0, district),
+         # clean up some 0s that are actually missing data 
+         district =  ifelse(chamber == "House" & district == "0", NA, district) %>% 
+           as.numeric() 
+         ) 
+
+speakers %<>% 
+  rename(state_abbrev = state)
+
+# FIXME focusing on the 107-111th for now 
+speakers %<>% 
+  filter(congress > 106)
+
+speakers %<>% 
+  # combine information into one field
+  mutate(speaker = paste(chamber, firstname, lastname, state_abbrev) %>% 
+           str_replace("Senate", "Senator") %>% 
+           str_replace("House", "Representative") %>% 
+           str_replace("Representative R\\.", "Representative"))
+
+# name matching function 
+source(here("code", "nameMethods.R"))
+
+# typos in these data include "WM" instead of "William" and "R. Miller" for "Representative Brad Miller", the rest are known permutations and nicknames 
+source(here("code", "MemberNameTypos.R"))
+
+speakers1 <- speakers %>% extractMemberName(col_name = "speaker", members = members)
+
+# FIXME, overmatches party switchers (and maybe others)
+crosswalk <- speakers1 %>% 
+  select(speaker, speakerid, icpsr, bioname, congress, chamber, nonvoting) %>%
+  distinct()  %>% 
+  left_join(members %>% 
+              select(icpsr, congress, chamber, state_abbrev, party_name, district_code)) %>%
+  distinct()
+```
+
+### Failed to match with voteview on name, chamber, state
+
+My congressional name search function gets us 100% matches when we don't use party information, but party-switchers get an ICPSR for both parties. When we match on party, we find that some party info in the speakers data are incorrect. 
+
+```{r}
+# failed to match in crosswalk
+crosswalk %>% filter(is.na(icpsr) & nonvoting == "voting") %>%
+  kablebox()
+```
+
+
+### Failed to match when including party
+
+Missing district data in the speakers data is fine; we can fill it in from voteview. 
+
+I have not yet found incorrect districts, but these would cause this to fail (and rightly so, getting the district right is important!).
+
+However, the speakers data has a few incorrect parties. 
+-Crenshaw was never an independent 
+-alexander was a D in the 108th
+-specter switched in 2009 (11th), he was not a D in the 109 or 110
+-Lieberman called himself an "independent Democrat" and caucused with the Ds, so he is only a D in voteview
+
+These can be corrected, or we can use those from voteview if we decided to go with their first party or modal party. There are likely more instances in the speakers data where their party is coded inconsistently with either principle.
+
+
+This result is identical to fastLink.
+
+```{r}
+# failed to match in data 
+test <- speakers %>% 
+  left_join(crosswalk) %>% 
+  left_join(members %>% select(icpsr, chamber, congress, state_abbrev, party_name, district_code) %>% distinct()) %>% 
+  # require district match where there is district data in speaker data
+  filter((district == district_code | is.na(district) ) ) %>% 
+  # drop party switchers
+  filter(party == str_sub(party_name, 1,1) | is.na(party_name)) %>% 
+  distinct()
+
+
+
+speakers %>%
+  anti_join(test) %>% 
+  select(party, everything()) %>%
+  kablebox()
+```
+
+
+# Questions 
+- should I correct speakers data party by hand or replace it in a principled way with with voteview? (not a big deal either way). I suggest going with voteview, and picking D or R over I when unknown. This depends on how important it is to keep this party in this dataset perfectly consistant with the speakers data, which does not seem important.
+
+# Notes
+
+## TODO
+
+- we are ignoring incorrect parties (and thus ICPSRs) assigned to party-switchers for now. Eventually, we will need to look up the first speech that a switcher made and re-code their party for speeches after that (assuming that party for the speach data was assigned based on their party at the beginning of the congress).
