@@ -1,0 +1,313 @@
+---
+title: "Scrape the Congressional Record with `rvest`"
+subtitle: 
+author: ""
+output:
+    html_document:
+      highlight: zenburn
+      toc: true
+      toc_float: true
+      code_folding: hide
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r global.options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      cache = FALSE, 
+                      fig.width=8.5, 
+                      split = T,
+                      fig.align = 'center', 
+                      fig.path='figs/',
+                      warning=FALSE, 
+                      message=FALSE)
+
+
+library(tidyverse)
+library(rvest)
+library(readr)
+library(magrittr)
+library(tidytext)
+library(knitr)
+library(kableExtra)
+library(here)
+library(crayon)
+
+library(ggplot2); theme_set(theme_minimal())
+  options(
+    ggplot2.continuous.color = "viridis",
+    ggplot2.continuous.fill = "viridis"
+  )
+  scale_color_discrete <- function(...)
+    scale_color_viridis_d(...)
+  scale_fill_discrete <- function(...)
+    scale_fill_viridis_d(...)
+  
+kablebox <- . %>%  knitr::kable() %>% 
+  kable_styling() %>% 
+  scroll_box(height = "400px")
+```
+
+# Scrape URLs for every bit of the Congressional Record
+
+As we do so, we retain some key metadata 
+- The record is divided by date
+- The record is divided into three sections: Senate, House, Extensions of Remarks (text submitted to the record later)
+- the page number ("S3253" is the 3,253rd page of the recored, featuring remarks from the Senate)
+
+URLs look like this:
+"https://www.congress.gov/congressional-record/2017/6/6/senate-section/article/S3253-6"
+
+```{r, eval=FALSE}
+# a date range to scrape
+dates <- seq(as.Date("2007/01/01"), 
+             as.Date("2008/01/01"),
+             #Sys.Date(), # today
+             by = "day")
+
+# a function to make a data frame of of all cr text urls for a date
+get_cr_df <- function(date, section){
+
+  url <- str_c("https://www.congress.gov/congressional-record", 
+             date %>% str_replace_all("-", "/"), 
+             section, sep = "/")
+
+  pages <- read_html(url) %>%
+    html_nodes("a")
+  
+d <- tibble(header = html_text(pages),
+            date = date,
+            section = section,
+            url = str_c("https://www.congress.gov", 
+                         html_attr(pages, "href")
+                         )
+            ) %>% 
+  # trim down to html txt pages
+  filter(url %>% str_detect("article")) 
+
+return(d)
+}
+
+  ## For testing
+    # section <- "senate-section"
+    # date <- "2020-09-15"
+    # get_cr_df(date, section)
+
+# an empty dataframe for failed calls
+d_init <-  tibble(header = "",
+                  date = as.Date(NA),
+                  section = "",
+                  url = "")
+
+# a dataframe of headers, dates, and url paths
+senate <- map_dfr(dates, .f = possibly(get_cr_df, otherwise = d_init), section = "senate-section") 
+
+house <- map_dfr(dates, .f = possibly(get_cr_df, otherwise = d_init), section = "house-section") 
+
+ext <- map_dfr(dates, .f = possibly(get_cr_df, otherwise = d_init), section = "extensions-of-remarks-section") 
+
+cr_metadata <- full_join(senate, house) %>% 
+  full_join(ext)
+
+# drop dates where for which there is no record
+cr_metadata %<>% filter(header != "")
+```
+
+```{r save, eval=FALSE}
+  d <- cr_metadata
+  load(here::here("data", "cr_metadata.Rdata"))
+  cr_metadata %<>% full_join(d)
+  save(cr_metadata, file = here::here("data", "cr_metadata.Rdata"))
+```
+
+# Download the text of the congressional record
+
+The "View TXT in new window" url will take you to an .htm file of just the congressional record text. Compared to the much larger .html of the main page, the (very small) downside is that some of the header information is lost (nothing distinguishes main headers from subheaders).
+
+```{r download_htm, eval = FALSE}
+# already downloaded 
+downloaded <- list.files(here::here("data", "htm"))
+
+# a function to download htm
+get_cr_htm <- function(url){
+  
+  ## test
+  # url <- "https://www.congress.gov/congressional-record/2020/03/02/senate-section/article/S1255-1"
+  
+  # follow the link to the txt htm 
+  url %<>% 
+    html_session() %>%
+    follow_link("View TXT in new window")
+  
+  # name files the end of the url 
+  file <- str_remove(url$url, ".*modified/")
+  
+  # if the file has not already been downloaded
+  if(!file %in% downloaded){
+      read_html(url) %>% 
+      write_html(file = here::here("data","htm", file))
+  }
+}
+
+## test 
+# get_cr_htm(cr_metadata$url[1])
+
+walk(cr_metadata$url, get_cr_htm)
+```
+
+# Download the full HTML
+
+The full HTML of the main page appears to have some metadata beyond the TXT files. 
+- main subject headers 
+- possibly speaker id's (speeches appear to be tagged with member id's, but I have yet to find them)
+
+However, the full HTML is several GB per year. 
+
+```{r download_html, eval = FALSE}
+# make file path
+cr_metadata %<>% 
+  mutate(file = str_c("CREC-", 
+                      date,"-",
+                      # the file title
+                      url %>% str_remove(".*article/"), 
+                      ".html"))
+
+# already downloaded 
+downloaded <- list.files(here::here("data", "html"))
+
+# a function to download html
+get_cr_html <- function(url, file){
+  message(url)
+  if(!file %in% downloaded){
+    url %>% 
+      read_html() %>% 
+      write_html(file = here::here("data", "html",file)
+  }
+}
+
+## test 
+# get_cr(d$url[2], d$file[2])
+
+start <- Sys.time()
+walk2(cr_metadata$url, cr_metadata$file, get_cr_html)
+Sys.time() - start
+```
+
+# Number of documents over time
+
+
+```{r, include=FALSE, eval = TRUE}
+# load cached data
+load(here::here("data", "cr_metadata.Rdata"))
+```
+
+In all, we have `r nrow(cr_metadata)` documents from `r min(cr_metadata$date)` to `r max(cr_metadata$date)`.
+
+### By day
+
+```{r cr_sections-day}
+# for plotting
+cr_metadata %<>% 
+  mutate(year = str_sub(date, 1,4),
+         chamber = section %>% 
+           str_remove("-.*") %>% 
+           str_to_title() %>%
+           str_replace("Extensions", "Extensions of Remarks")) 
+
+cr_metadata %>% 
+  ggplot() + 
+  aes(x = date) +
+  geom_bar() + 
+  facet_wrap("chamber", ncol = 1, scales = "free_y") 
+```
+
+### By year
+
+```{r cr_sections_year}
+# for plotting
+cr_metadata %<>% 
+  mutate(year = str_sub(date, 1,4),
+         chamber = section %>% 
+           str_remove("-.*") %>% 
+           str_to_title() %>%
+           str_replace("Extensions", "Extensions of Remarks")) 
+
+cr_metadata %>% 
+  ggplot() + 
+  aes(x = year) +
+  geom_bar() + 
+  facet_wrap("chamber", ncol = 1)
+```
+
+## Headers mentioning COVID19
+```{r covid}
+cr_metadata %<>% 
+  # id sections about COVID19
+  mutate(covid = ifelse(str_detect(header, "COVID|CORONA"), "COVID19", "Other") )
+
+cr_metadata %>% 
+  filter(date > as.Date("2019-10-01"), 
+         chamber != "Extensions of Remarks") %>% 
+  ggplot() + 
+  aes(x = date, fill = covid) +
+  geom_bar() +
+  labs(fill = "") + 
+  facet_grid(covid ~ chamber, scales = "free_y") 
+```
+
+`r cr_metadata %>% filter(covid == "COVID19") %>% nrow()` documents have "COVID" or "coronavirus" in their header.
+
+## Most common headers
+```{r cr_subtypes}
+# clean up headers 
+cr_metadata %<>% 
+         mutate(subtype = header %>% 
+           toupper() %>% 
+           str_remove(";.*") %>% 
+           str_replace(".*ACT.*", "ACT") %>% 
+             str_replace("MESSAGE ", "MESSAGES ") %>%
+             str_replace("CONDEMNING.*", "CONDEMNING") %>%
+           str_remove_all(" BY .*| UNTIL.*| \\(EXECUTIVE.*")
+         )
+
+# top 100 headers
+cr_metadata %>% 
+  count(subtype, sort = T) %>% 
+  head(100) %>% 
+  kablebox()
+
+top10 <- cr_metadata %>% count(subtype, sort = T) %>% .$subtype %>% head(10)
+
+cr_metadata %>% 
+  filter(subtype %in% top10) %>% 
+  ggplot() + 
+  aes(x = date, fill = subtype) +
+  geom_bar(width = .9) +
+  labs(fill = "Most common topics") + 
+  facet_wrap("chamber", ncol = 1, scales = "free")
+```
+
+## Most discussed acts
+```{r cr_acts, fig.width = 10}
+# top 100 headers
+cr_metadata %>% 
+  filter(str_detect(header, " ACT( |$)")) %>%
+  count(header, sort = T) %>% 
+  head(100) %>% 
+  kablebox()
+
+top10 <- cr_metadata %>% 
+  filter(str_detect(header, " ACT( |$)")) %>%
+  count(header, sort = T) %>% .$header %>% head(10)
+
+cr_metadata %>% 
+  filter(header %in% top10) %>% 
+  mutate(header = header %>% str_remove(";.*")) %>%
+  ggplot() + 
+  aes(x = factor(year), fill = header) +
+  geom_bar(width = .9) +
+  labs(fill = "Most discussed acts",
+       x = "Year") + 
+  facet_wrap("chamber", ncol = 1, scales = "free_y") 
+```
