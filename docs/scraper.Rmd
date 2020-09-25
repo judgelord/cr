@@ -293,7 +293,7 @@ cr_metadata %>%
   facet_grid(dist ~ chamber, scales = "free_y") 
 ```
 
-`r cr_metadata %>% filter(covid == "COVID19") %>% nrow()` documents have "COVID" or "coronavirus" in their header.
+`r cr_metadata %>% filter(dist ==  "Gerrymandering") %>% nrow()` documents have "redistrict" or "gerrymander" in their header.
 
 ## Most common headers
 ```{r cr_subtypes}
