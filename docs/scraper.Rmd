@@ -283,6 +283,7 @@ cr_metadata %<>%
 
 cr_metadata %>% 
   filter(dist == "Gerrymandering") %>% 
+  select(date, header, url) %>%
   kablebox()
 
 cr_metadata %>% 
