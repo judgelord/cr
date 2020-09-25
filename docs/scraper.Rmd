@@ -14,7 +14,7 @@ editor_options:
 
 
 ```{r global.options, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, 
+knitr::opts_chunk$set(echo = FALSE, 
                       cache = FALSE, 
                       fig.width=8.5, 
                       split = T,
@@ -49,15 +49,20 @@ kablebox <- . %>%  knitr::kable() %>%
   scroll_box(height = "400px")
 ```
 
-# Scrape URLs for every bit of the Congressional Record
+# Scrape URLs for every subsection of the Congressional Record
 
-As we do so, we retain some key metadata 
-- The record is divided by date
-- The record is divided into three sections: Senate, House, Extensions of Remarks (text submitted to the record later)
-- the page number ("S3253" is the 3,253rd page of the recored, featuring remarks from the Senate)
+As we do so, we retain some helpful metadata  
 
-URLs look like this:
-"https://www.congress.gov/congressional-record/2017/6/6/senate-section/article/S3253-6"
+- The record is divided by date 
+- The record is divided into three sections: Senate, House, Extensions of Remarks (text submitted to the record later) 
+- The page number ("S3253" is the 3,253rd page of the record, featuring remarks from the Senate)
+
+For each day of the congressional record has a page: https://www.congress.gov/congressional-record/2017/6/6/senate-section
+
+On this page are URLs for each subsection. These URLs look like this:
+https://www.congress.gov/congressional-record/2017/6/6/senate-section/article/S3253-6
+
+We can identify linked text (`html_nodes("a")`), and put the URLs (`html_attr("href")`) and their text (`html_text()`) for each date and each section of the record into a data frame.  With `map_dfr` from the `purrr` package, we can then apply this to a range of dates. 
 
 ```{r, eval=FALSE}
 # a date range to scrape
@@ -74,13 +79,13 @@ get_cr_df <- function(date, section){
              section, sep = "/")
 
   pages <- read_html(url) %>%
-    html_nodes("a")
+    html_nodes("a") # "a" nodes are linked text
   
-d <- tibble(header = html_text(pages),
+d <- tibble(header = html_text(pages), # the text of the linked text
             date = date,
             section = section,
             url = str_c("https://www.congress.gov", 
-                         html_attr(pages, "href")
+                         html_attr(pages, "href") # urls are "href" attributes of linked text
                          )
             ) %>% 
   # trim down to html txt pages
@@ -123,7 +128,7 @@ cr_metadata %<>% filter(header != "")
 
 # Download the text of the congressional record
 
-The "View TXT in new window" url will take you to an .htm file of just the congressional record text. Compared to the much larger .html of the main page, the (very small) downside is that some of the header information is lost (nothing distinguishes main headers from subheaders).
+The "View TXT in new window" URL will take you to a .htm file of just the congressional record text. Compared to the much larger .html of the main page, the (minimal) downside is that some of the header information is lost (nothing distinguishes main headers from subheaders).
 
 ```{r download_htm, eval = FALSE}
 # already downloaded 
@@ -154,6 +159,12 @@ get_cr_htm <- function(url){
 # get_cr_htm(cr_metadata$url[1])
 
 walk(cr_metadata$url, get_cr_htm)
+```
+
+TXT pages look like this: https://www.congress.gov/115/crec/2017/06/06/modified/CREC-2017-06-06-pt1-PgS3253-6.htm
+
+```{r}
+read_html("https://www.congress.gov/115/crec/2017/06/06/modified/CREC-2017-06-06-pt1-PgS3253-6.htm") %>% html_text() %>% str_split("\n") %>% kablebox()
 ```
 
 # Download the full HTML
