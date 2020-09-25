@@ -3,18 +3,18 @@ title: "Scrape the Congressional Record with `rvest`"
 subtitle: 
 author: ""
 output:
-    html_document:
-      highlight: zenburn
-      toc: true
-      toc_float: true
-      code_folding: hide
+  html_document:
+    highlight: zenburn
+    toc: true
+    toc_float: true
+    code_folding: hide
 editor_options: 
   chunk_output_type: console
 ---
 
 
 ```{r global.options, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, 
+knitr::opts_chunk$set(echo = TRUE, 
                       cache = FALSE, 
                       fig.width=8.5, 
                       split = T,
@@ -126,9 +126,11 @@ cr_metadata %<>% filter(header != "")
   save(cr_metadata, file = here::here("data", "cr_metadata.Rdata"))
 ```
 
-# Download the text of the congressional record
+# Option 1: Download the text of the congressional record
 
-The "View TXT in new window" URL will take you to a .htm file of just the congressional record text. Compared to the much larger .html of the main page, the (minimal) downside is that some of the header information is lost (nothing distinguishes main headers from subheaders).
+The "View TXT in new window" URL takes us to a .htm file of just the congressional record text. Compared to the much larger .html of the main page, the (minimal) downside is that some of the header information is lost (nothing distinguishes main headers from subheaders).
+
+`html_session() %>% follow_link("View TXT in new window")` takes us to the raw TXT page. With `walk` from the `purrr` package, we can download each raw txt page to a file with the same name.
 
 ```{r download_htm, eval = FALSE}
 # already downloaded 
@@ -167,13 +169,15 @@ TXT pages look like this: https://www.congress.gov/115/crec/2017/06/06/modified/
 read_html("https://www.congress.gov/115/crec/2017/06/06/modified/CREC-2017-06-06-pt1-PgS3253-6.htm") %>% html_text() %>% str_split("\n") %>% kablebox()
 ```
 
-# Download the full HTML
+# Option 2: Download the full HTML
 
-The full HTML of the main page appears to have some metadata beyond the TXT files. 
+The full HTML of the landing page for each subsection appears to have some metadata beyond the TXT files. 
+
 - main subject headers 
-- possibly speaker id's (speeches appear to be tagged with member id's, but I have yet to find them)
+- possibly speaker IDs (speeches appear to be tagged with member IDs, but I have yet to find them in the HTML)
 
-However, the full HTML is several GB per year. 
+> **_CAUTION:_**  The full HTML is several GB per year! 
+
 
 ```{r download_html, eval = FALSE}
 # make file path
@@ -213,7 +217,9 @@ Sys.time() - start
 load(here::here("data", "cr_metadata.Rdata"))
 ```
 
-In all, we have `r nrow(cr_metadata)` documents from `r min(cr_metadata$date)` to `r max(cr_metadata$date)`.
+### In all, we have `r nrow(cr_metadata)` documents from `r min(cr_metadata$date)` to `r max(cr_metadata$date)`.
+
+> **NOTE:** The plots below use the number of subsections and their headers. Thus, they only require the metadata from scraping the URLs, not the full text.
 
 ### By day
 
@@ -265,6 +271,26 @@ cr_metadata %>%
   geom_bar() +
   labs(fill = "") + 
   facet_grid(covid ~ chamber, scales = "free_y") 
+```
+
+`r cr_metadata %>% filter(covid == "COVID19") %>% nrow()` documents have "COVID" or "coronavirus" in their header.
+
+## Headers mentioning redistricting or gerrymandering
+```{r redistricting}
+cr_metadata %<>% 
+  # id sections about redistricting
+  mutate(dist = ifelse(str_detect(header, "GERRYMANDER|REDISTRICT"), "Gerrymandering", "Other") )
+
+cr_metadata %>% 
+  filter(dist == "Gerrymandering") %>% 
+  kablebox()
+
+cr_metadata %>% 
+  ggplot() + 
+  aes(x = date, fill = dist) +
+  geom_bar(width = 20) +
+  labs(fill = "") + 
+  facet_grid(dist ~ chamber, scales = "free_y") 
 ```
 
 `r cr_metadata %>% filter(covid == "COVID19") %>% nrow()` documents have "COVID" or "coronavirus" in their header.
