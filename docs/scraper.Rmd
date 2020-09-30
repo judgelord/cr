@@ -66,9 +66,9 @@ We can identify linked text (`html_nodes("a")`), and put the URLs (`html_attr("h
 
 ```{r, eval=FALSE}
 # a date range to scrape
-dates <- seq(as.Date("2007/01/01"), 
-             as.Date("2008/01/01"),
-             #Sys.Date(), # today
+dates <- seq(as.Date("2020/01/01"), 
+             # as.Date("2020/09/01"),
+             Sys.Date(), # today
              by = "day")
 
 # a function to make a data frame of of all cr text urls for a date
@@ -160,6 +160,7 @@ get_cr_htm <- function(url){
 ## test 
 # get_cr_htm(cr_metadata$url[1])
 
+# download file for each url 
 walk(cr_metadata$url, get_cr_htm)
 ```
 
@@ -348,4 +349,84 @@ cr_metadata %>%
   labs(fill = "Most discussed acts",
        x = "Year") + 
   facet_wrap("chamber", ncol = 1, scales = "free_y") 
+```
+
+# Text features
+
+```{r}
+cr <- list.files("/Users/devin/cr_bulk/data/htm")
+
+d <- tibble(file = cr,
+       date = str_extract(cr, "[0-9]{4}-[0-9]{2}-[0-9]{2}") %>% 
+         as.Date)
+
+#FIXME
+d %<>% filter(date > as.Date("2020-09-20"))
+
+
+d %<>% mutate(url = str_c("https://www.congress.gov/116/crec/", 
+                          date %>% str_replace_all("-", "/"), 
+                          "/modified/", 
+                          file))
+#/FIXME
+
+# a function to grab sentences with keywords
+keyword_sentence <- function(file, word){
+  text <- read_lines(str_c("/Users/devin/cr_bulk/data/htm/", file)) %>% 
+    str_c(collapse = " ") %>% 
+    str_squish()
+  
+  if( str_detect(text, regex(word, ignore_case = T) ) ){
+     text %<>%
+      enframe(name = NULL, value = "text") %>%
+      unnest_tokens(sentence, text, token = "sentences") %>% 
+      filter(str_detect(sentence, word)) %>% 
+      .$sentence %>% 
+      str_c(collapse = "...")
+  } else {
+    text <- "NA"
+  }
+    
+  return(text)
+}
+
+## test 
+# keyword_sentence(d$file[1], "speaker")
+```
+
+Sentences containing "speaker" on `r max(d$date)`
+
+(a good test because most speaches in the House address the speaker)
+```{r}
+d %>% 
+  filter(date == max(d$date) ) %>% 
+  mutate(sentence = map_chr(file, .f = keyword_sentence, word = "speaker") ) %>%
+  select(date, sentence, url) %>% kablebox()
+```
+
+---
+
+Sentences containing "census" between `r min(d$date)` and `r max(d$date)`
+```{r}
+d %>% mutate(sentence = map_chr(file, .f = keyword_sentence, word = "census") ) %>%
+  filter(sentence != "NA") %>% 
+  select(date, sentence, url) %>% kablebox()
+```
+
+---
+
+Sentences containing "redistrict" "efficiency gap" or "gerrymander" between `r min(d$date)` and `r max(d$date)`
+```{r}
+d %>% mutate(sentence = map_chr(file, .f = keyword_sentence, word = "redistrict|gerrymander|efficiency gap") ) %>%
+  filter(sentence != "NA") %>% 
+  select(date, sentence, url) %>% kablebox()
+```
+
+---
+
+Sentences containing "partisan bias" between `r min(d$date)` and `r max(d$date)`
+```{r}
+d %>% mutate(sentence = map_chr(file, .f = keyword_sentence, word = "partisan bias") ) %>%
+  filter(sentence != "NA") %>% 
+  select(date, sentence, url) %>% kablebox()
 ```
