@@ -361,7 +361,8 @@ d <- tibble(file = cr,
          as.Date)
 
 #FIXME
-d %<>% filter(date > as.Date("2020-09-20"))
+d %<>% filter(date > as.Date("2019-03-01"),
+              date < as.Date("2019-03-09"))
 
 
 d %<>% mutate(url = str_c("https://www.congress.gov/116/crec/", 
