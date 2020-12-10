@@ -1,0 +1,238 @@
+---
+title: "Legislator behavior by district characteristics"
+subtitle: 
+author: ""
+output:
+    # pdf_document:
+    #   toc: true
+    #   keep_tex: true
+    html_document:
+      highlight: zenburn
+      toc: true
+      toc_float: true
+      code_folding: hide
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r global.options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      cache = FALSE, 
+                      fig.width=8.5, 
+                      split = T,
+                      fig.align = 'center', 
+                      fig.path='figs/',
+                      warning=FALSE, 
+                      message=FALSE)
+
+
+library(tidyverse)
+library(readr)
+library(magrittr)
+library(tidytext)
+library(knitr)
+library(kableExtra)
+library(here)
+library(crayon)
+
+library(ggplot2); theme_set(theme_bw())
+  options(
+    ggplot2.continuous.color = "viridis",
+    ggplot2.continuous.fill = "viridis"
+  )
+  scale_color_discrete <- function(...)
+    scale_color_viridis_d(...)
+  scale_fill_discrete <- function(...)
+    scale_fill_viridis_d(...)
+  
+kablebox <- . %>%  knitr::kable() %>% 
+  kable_styling() %>% 
+  scroll_box(height = "400px")
+```
+
+I'm just using Hein-bound speech data for now; I'll replace this with our data scraped from the Congressional Record when we nail down exactly what we want to extract from speeches.
+
+```{r}
+# a function to read speeches and speaker data 
+get_speeches <- function(file){
+  
+  message(file)
+  
+  read_delim(str_c(here("hein-bound/", file) %>% str_remove("/cr") ),
+             delim = "|") %>% 
+  # extract congress from file name
+  mutate(congress = str_remove(file, "_.*") ) %>% 
+    select(speakerid, speech_id, congress) %>% 
+  distinct()
+}
+
+# files 
+heinbound <- list.files(here("hein-bound") %>% str_remove("/cr") ) %>% 
+  enframe(value = "file")
+
+# subset to speakermap files from recent congresses
+speakermaps <- heinbound %>% 
+  filter(str_detect(file, "SpeakerMap"),
+         str_detect(file, "^1") #FIXME subsetting to >99th congress
+         )
+
+# speakers dataframe
+speeches <- map_dfr(speakermaps$file, get_speeches)
+
+speeches$congress %<>% as.numeric()
+
+# FIXME focusing on the 107-111th for now 
+speeches %<>% 
+  filter(congress > 106)
+
+
+# Devin's members data (expanded from voteview)
+load(here("data", "members.Rdata"))
+
+# Make mixed case names, like "McConnell" upper case (to go the other way, we would need to fix them one by one)
+members %<>% 
+  mutate(last_name = str_to_upper(last_name),
+         party = str_sub(party_name, 1, 1))
+
+# GET CROSSWALK
+load(here::here("data", "crosswalk.Rdata") )
+
+speeches %<>% 
+  select(congress, speakerid, speech_id) %>% 
+  distinct() %>% 
+  count(congress, speakerid) %>% 
+  # Add ICPSRs 
+  left_join(crosswalk) %>% 
+  # add NOMINATE
+  left_join(members %>% 
+              select(chamber, party, icpsr, nominate.dim1) %>% 
+              distinct() ) %>% 
+  mutate(name = bioname %>% str_remove(",.*") %>% str_to_title() ) %>% 
+  filter(party %in% c("D", "R"))
+```
+
+## Number of Speeches by NOMINATE Score 2001-2011
+```{r speeches_nominate}
+plot_speeches <- function(data, var, lab){
+  
+data %>%
+    mutate(x = pull(data, var)) %>% 
+  ggplot() + 
+  aes(x = x, y = n, label = name, color = party) + 
+  geom_point(alpha = .2) + 
+      geom_smooth() + 
+  geom_text(check_overlap = T, color = "black") + 
+  labs(y = "Number of Speeches per Congress",
+       x = lab,
+       color = "Party") +
+  scale_color_manual(values=c("#0015BC", "#FF0000")) 
+}
+
+plot_speeches_congress <- function(data, var, lab){
+
+data %>% 
+  mutate(x = pull(data, var)) %>% 
+  ggplot() + 
+  aes(x = x, y = n, label = name, color = party) + 
+  geom_point(alpha = .2) + 
+  geom_text(check_overlap = T, color = "black") + 
+  labs(y = "Number of Speeches per Congress",
+       x = lab,
+       color = "Party") +
+  scale_color_manual(values=c("#0015BC", "#FF0000")) + 
+    facet_wrap("congress", scales = "free")
+}
+
+plot_speeches(data = speeches, var = "nominate.dim1", lab = "NOMINATE 1 Score")
+
+plot_speeches_congress(speeches, "nominate.dim1", "NOMINATE 1 Score")
+```
+
+## Vote share data from [MIT Elections Lab](https://electionlab.mit.edu/data)
+
+```{r}
+house <- read_csv(here::here("data", "voteshare", "1976-2018-house3.csv"))
+
+house %<>% filter(stage == "gen", 
+                  party %in% c("DEMOCRAT", "REPUBLICAN"),
+                  !runoff,
+                  !special)
+
+house %<>%  mutate(congress = as.numeric(round((year - 2000.1)/2)) + 107) # the 107th congress began in 2001 and we want the congress after the election 
+
+house %<>%  mutate(congress_year = as.numeric(round( (congress - 107)*2 + 2001 ))) # the 107th congress began in 2001 and we want the congress after the election 
+
+
+# align with voteview
+house %<>% 
+  mutate(party = str_sub(party, 1, 1)) %>% 
+  rename(state_abbrev = state_po) %>% 
+  mutate(district_code = district) 
+
+house2 <- house %>% 
+  group_by(congress, party, state_abbrev, district_code) %>% 
+  summarise(votes = sum(candidatevotes) ) %>% 
+  ungroup() %>% 
+  group_by(congress, state_abbrev, district_code) %>% 
+  mutate(twoparty = sum(votes),
+         share = votes/twoparty) %>% 
+  ungroup()
+
+speeches %<>% 
+  filter(chamber == "House") %>% 
+  left_join(house2)  # %>% select(bioname, state_abbrev, district_code, chamber, share) %>% filter(is.na(share))
+
+
+## inspect candidates who won with < 40% pres vote for their party 
+#speeches %>% filter(share < .4) %>% select(bioname,  congress)
+```
+
+### Number of Speeches by Vote Share
+```{r speeches_voteshare}
+speeches %>% plot_speeches("share", "Two-party Vote Share")
+```
+
+### Number of Speeches by Vote Share in Contested Races
+```{r speeches_voteshare_contested}
+speeches %>% 
+  filter(share < 1) %>% 
+  plot_speeches("share", "Two-party Vote Share in Contested Races")
+```
+
+### Number of Speeches by Co-partisan Presidential Vote Share
+
+```{r speeches_voteshare_pres}
+
+pres <- read_csv(here::here("data", "voteshare", "1976-2016-president.csv"))
+
+pres %<>% 
+  # just dem and gop (not other parties "e.g. democrat-farmer-labor"
+  mutate(party = str_remove(party, "-.*|ic-.*")) %>% 
+  filter(party %in% c("democrat", "republican") )
+
+pres %<>%  mutate(congress = as.numeric(round((year - 2000.1)/2)) + 107) # the 107th congress began in 2001 and we want the congress after the election 
+
+
+# align with voteview
+pres %<>% 
+  mutate(party = str_sub(party, 1, 1) %>% toupper() ) %>% 
+  rename(state_abbrev = state_po) 
+
+pres2 <- pres %>% 
+  group_by(congress, party, state_abbrev) %>% 
+  summarise(votes_pres = sum(candidatevotes) ) %>% 
+  ungroup() %>% 
+  group_by(congress, state_abbrev) %>% 
+  mutate(twoparty_pres = sum(votes_pres),
+         share_pres = votes_pres/twoparty_pres) %>% 
+  ungroup()
+
+speeches %<>% 
+  left_join(pres2)  # %>% select(bioname, state_abbrev, district_code, chamber, share) %>% filter(is.na(share))
+
+# # candidates who won with < 40% pres vote for their party 
+# speeches %>% filter(share_pres < .4) %>% select(bioname,  congress)
+
+speeches %>% plot_speeches("share_pres", "Co-partisan Share of Two-party Presidential Vote Share")
+```

@@ -323,6 +323,8 @@ speakers %>%
   anti_join(test) %>% 
   select(party, everything()) %>%
   kablebox()
+
+save(crosswalk, file =  here::here("data", "crosswalk.Rdata"))
 ```
 
 
