@@ -15,7 +15,7 @@ editor_options:
 
 ```{r global.options, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, 
-                      cache = TRUE, 
+                      cache = FALSE, 
                       fig.width=8.5, 
                       split = T,
                       fig.align = 'center', 
@@ -44,14 +44,16 @@ library(ggplot2); theme_set(theme_minimal())
   scale_fill_discrete <- function(...)
     scale_fill_viridis_d(...)
   
-kablebox <- . %>%  knitr::kable() %>% 
+kablebox <- . %>% 
+  head(100) %>%
+  knitr::kable() %>% 
   kable_styling() %>% 
   scroll_box(height = "400px")
 ```
 
 Data scraped using this script: https://judgelord.github.io/cr/scraper.html
 
-```{r}
+```{r data, cache=TRUE}
 # metadata
 load(here::here("data", "cr_metadata.Rdata"))
 
@@ -76,16 +78,20 @@ d <- tibble(file = cr,
 
 d %<>% arrange(date) %>% arrange(rev(date))
 
-#FIXME
-# just using 1000 documents for now
-d %<>% top_n(500, date)
-# /FIXME
 
 # reconstruct URLs
 d %<>% mutate(url_txt = str_c("https://www.congress.gov/117/crec/", 
                           date %>% str_replace_all("-", "/"), 
                           "/modified/", 
                           file))
+```
+
+Just using a sample of documents for now
+```{r extract, cache=TRUE}
+#FIXME
+# just using a few documents for now
+d %<>% top_n(10000, date)
+# /FIXME
 
 
 # a function to get the first bit of text
@@ -111,7 +117,7 @@ head_text <- function(file){
 # a function to grab speaker names
 extract_names <- function(file){
   
-  names <- "(Mr.|Mrs.|Ms.|Miss|HON.) (([A-Z]|\\.| )* |-|)(Mc|Mac|Des|De|La|[A-Z])[A-Z][A-Z]+|The PRESIDING OFFICER|The SPEAKER pro tempore \\(.*?\\)|The ACTING PRESIDENT|The VICE PRESIDENT"
+  names <- "(Mr.|Mrs.|Ms.|Miss|HON.) (([A-Z]|\\.| )* |-|)(Mc|Mac|Des|De|La|[A-Z])[A-Z][A-Z]+|The PRESIDING OFFICER|The SPEAKER\\.|The SPEAKER pro tempore \\(.*?\\)|The ACTING PRESIDENT|The VICE PRESIDENT"
   
   # for testing 
   #file <- d$file[41]
@@ -132,7 +138,7 @@ extract_names <- function(file){
       str_c(collapse = ";") %>% 
       str_sub(0, 240)
   } else {
-    text <- "NA"
+    text <- NA
   }
     
   return(text)
@@ -144,8 +150,16 @@ extract_names <- function(file){
 d %<>%
   mutate(speaker = file %>% map_chr(possibly(extract_names, otherwise = "")))
 
-
+# the first bit of text
 d$text <- d$file %>% map_chr(possibly(head_text, otherwise = ""))
+
+
+# fill in proceedural roles
+d %<>% 
+  mutate(process = str_extract(text, "^(ANNOUNCEMENT|RECESS|PRAYER|PLEDGE|MESSAGE|EXECUTIVE MESSAGE|EXECUTIVE COMMUNICATION|EXECUTIVE AND OTHER COMMUNICATION|MEASURE|ADJOURNMENT|DESIGNATION|THE JOURNAL|RESIGNATION|ELECTING|CONSTITUTIONAL|ADDITIONAL SPONSORS|SWEARING IN|MOMENT OF SILENCE|SENATE COMMITTEE MEETING|BUDGETARY|EFFECTS|REAPPOINTMENT|APPOINTMENT|RECALL|COMMUNICATION|REMOTE COMMITTEE PROCEEDINGS|REMOTE VOTING||ENROLLED BILL|ADDITIONAL COSPONSORS|DISCHARGED NOMINATION|CONFIRMATION|JOINT RESOLUTION|SENATE ENROLLED BILLS|PUBLICATION|EXPLANATORY STATEMENT|WITHDRAWAL)"),
+         speaker = coalesce(speaker, process) )
+
+
 
 # extract names
 # cr_metadata %<>%
@@ -158,7 +172,7 @@ d %<>% left_join(cr_metadata)
 
 d %>% 
   filter(!str_detect(speaker,";.*;"), 
-         speaker != "NA") %>% 
+         !is.na(speaker) ) %>% 
   select(speaker, text, url_txt) %>% kablebox()
 ```
 
@@ -166,17 +180,16 @@ d %>%
 
 ## Most frequent speakers from `r min(d$date)` to `r max(d$date)`
 
-```{r}
+```{r, cache=FALSE}
 d %>% 
-  filter(speaker != "NA") %>% 
-  count(speaker, sort = T) %>% head(20) %>% kablebox()
+  count(speaker, sort = T) %>% kablebox()
 ```
 
 ---
 
 ## Multiple speakers?
 
-```{r}
+```{r, cache=FALSE}
 d %>% 
   filter(str_detect(speaker, ";.*;")) %>% 
   select(url_txt, speaker) %>% kablebox()
@@ -186,18 +199,41 @@ d %>%
 
 ## No speaker? 
 
-```{r}
+```{r, cache=FALSE}
 d %>% 
-  filter(speaker == "NA") %>% 
+  filter(is.na(speaker)) %>% 
   select(speaker, text, url_txt) %>% kablebox()
+```
+
+# Match with voteview 
+
+```{r, eval = FALSE}
+# Devin's members data (expanded from voteview)
+load(here("data", "members.Rdata"))
+
+# Devin's name matching function 
+source(here("code", "nameMethods.R"))
+
+# common typos and known permutations and nicknames 
+source(here("code", "MemberNameTypos.R"))
+
+speakers1 <- d %>% extractMemberName(col_name = "speaker", members = members)
+
+# FIXME, overmatches party switchers (and maybe others)
+crosswalk <- speakers1 %>% 
+  select(speaker, speakerid, icpsr, bioname, congress, chamber, nonvoting) %>%
+  distinct()  %>% 
+  left_join(members %>% 
+              select(icpsr, congress, chamber, state_abbrev, party_name, district_code)) %>%
+  distinct()
 ```
 
 ## To Do
 
-1. Exclude prayer, the pledge, the journal, resignation, adjournment, executive communications, announcements, communications, appointment, reappointment, recess, recall, designations, additional sponsors, and other proceedural sections.
+[x] Exclude prayer, the pledge, the journal, resignation, adjournment, executive communications, announcements, communications, appointment, reappointment, recess, recall, designations, additional sponsors, and other proceedural sections.
 
-1. Parse sections with more than one speaker, starting with "[SPEAKER NAME]. (Mister|Madam) Speaker, ". For example, see the Impeachment speaches, where speakers yield time to other speakers.
+[ ] Parse sections with more than one speaker, starting with "[SPEAKER NAME]. (Mister|Madam) Speaker, ". For example, see the Impeachment speaches, where speakers yield time to other speakers.
 
-1. Check members with irregular capitalization beyond "Mc|Mac|Des|De|La"
+[ ] Check members with irregular capitalization beyond "Mc|Mac|Des|De|La"
 
-1. Match speaker names to ICPSR IDs like I did [here](https://judgelord.github.io/cr/speeches) for the hein-bound data using the crosswalk crated [here](https://judgelord.github.io/cr/member_data.html).
+[ ] Match speaker names to ICPSR IDs like I did [here](https://judgelord.github.io/cr/speeches) for the hein-bound data using the crosswalk crated [here](https://judgelord.github.io/cr/member_data.html).
