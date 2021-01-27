@@ -112,7 +112,10 @@ speeches %<>%
   filter(party %in% c("D", "R"))
 ```
 
-## Number of Speeches by NOMINATE Score 2001-2011
+# Number of Speeches 2001-2011
+
+## by NOMINATE Score 
+
 ```{r speeches_nominate}
 plot_speeches <- function(data, var, lab){
   
@@ -149,7 +152,9 @@ plot_speeches(data = speeches, var = "nominate.dim1", lab = "NOMINATE 1 Score")
 plot_speeches_congress(speeches, "nominate.dim1", "NOMINATE 1 Score")
 ```
 
-## Vote share data from [MIT Elections Lab](https://electionlab.mit.edu/data)
+## by Vote share 
+
+data from [MIT Elections Lab](https://electionlab.mit.edu/data)
 
 ```{r}
 house <- read_csv(here::here("data", "voteshare", "1976-2018-house3.csv"))

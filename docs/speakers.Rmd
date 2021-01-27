@@ -1,0 +1,203 @@
+---
+title: "Speakers in the Congressional Recored"
+subtitle: 
+author: ""
+output:
+  html_document:
+    highlight: zenburn
+    toc: true
+    toc_float: true
+    code_folding: hide
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r global.options, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      cache = TRUE, 
+                      fig.width=8.5, 
+                      split = T,
+                      fig.align = 'center', 
+                      fig.path='figs/',
+                      warning=FALSE, 
+                      message=FALSE)
+
+
+library(tidyverse)
+library(rvest)
+library(readr)
+library(magrittr)
+library(tidytext)
+library(knitr)
+library(kableExtra)
+library(here)
+library(crayon)
+
+library(ggplot2); theme_set(theme_minimal())
+  options(
+    ggplot2.continuous.color = "viridis",
+    ggplot2.continuous.fill = "viridis"
+  )
+  scale_color_discrete <- function(...)
+    scale_color_viridis_d(...)
+  scale_fill_discrete <- function(...)
+    scale_fill_viridis_d(...)
+  
+kablebox <- . %>%  knitr::kable() %>% 
+  kable_styling() %>% 
+  scroll_box(height = "400px")
+```
+
+Data scraped using this script: https://judgelord.github.io/cr/scraper.html
+
+```{r}
+# metadata
+load(here::here("data", "cr_metadata.Rdata"))
+
+# clean up data for plot clarity
+cr_metadata %<>% 
+  mutate(year = str_sub(date, 1,4) %>% as.numeric(),
+         chamber = section %>% 
+           str_remove("-.*") %>% 
+           str_to_title() %>%
+           str_replace("Extensions", "Extensions of Remarks")) 
+
+
+
+# load cr text file names
+cr <- list.files("/Users/devin/cr_bulk/data/htm")
+
+# extract date from file name
+d <- tibble(file = cr,
+            year = str_extract(cr, "[0-9]{4}") %>% as.numeric(),
+            date = str_extract(cr, "[0-9]{4}-[0-9]{2}-[0-9]{2}") %>% 
+         as.Date() ) 
+
+d %<>% arrange(date) %>% arrange(rev(date))
+
+#FIXME
+# just using 1000 documents for now
+d %<>% top_n(500, date)
+# /FIXME
+
+# reconstruct URLs
+d %<>% mutate(url_txt = str_c("https://www.congress.gov/117/crec/", 
+                          date %>% str_replace_all("-", "/"), 
+                          "/modified/", 
+                          file))
+
+
+# a function to get the first bit of text
+head_text <- function(file){
+
+  text <- read_lines(str_c("/Users/devin/cr_bulk/data/htm/", file)) %>% 
+    str_c(collapse = " ") %>% 
+    str_squish() %>% 
+    str_remove(".*?www.gpo.gov</a>\\] ") %>% 
+    str_sub(0, 500) %>% 
+    str_c("...")
+
+  return(text)
+}
+
+## test
+# head_text(d$file[5])
+
+
+
+# Extract speaker names
+
+# a function to grab speaker names
+extract_names <- function(file){
+  
+  names <- "(Mr.|Mrs.|Ms.|Miss|HON.) (([A-Z]|\\.| )* |-|)(Mc|Mac|Des|De|La|[A-Z])[A-Z][A-Z]+|The PRESIDING OFFICER|The SPEAKER pro tempore \\(.*?\\)|The ACTING PRESIDENT|The VICE PRESIDENT"
+  
+  # for testing 
+  #file <- d$file[41]
+  
+  text <- read_lines(str_c("/Users/devin/cr_bulk/data/htm/", file)) %>% 
+    str_c(collapse = " ") %>% 
+    str_squish()
+  text
+  
+  if( str_detect(text, names) ){
+     text %<>%
+      str_extract_all(names) %>% 
+      unlist() %>% 
+      # drop first letter of first sentence
+      str_remove("\\. [A-Z]$|\\.$") %>% 
+      str_squish() %>% 
+      unique() %>% 
+      str_c(collapse = ";") %>% 
+      str_sub(0, 240)
+  } else {
+    text <- "NA"
+  }
+    
+  return(text)
+}
+
+## Test
+# extract_names(d$file[46])
+
+d %<>%
+  mutate(speaker = file %>% map_chr(possibly(extract_names, otherwise = "")))
+
+
+d$text <- d$file %>% map_chr(possibly(head_text, otherwise = ""))
+
+# extract names
+# cr_metadata %<>%
+#   mutate(speaker = file %>% map_chr(possibly(extract_names, otherwise = "")))
+
+############################################
+# join metadata to file names 
+#FIXME for some reason, urls without a -[1-9] at the end seem to be missing from the metadata
+d %<>% left_join(cr_metadata) 
+
+d %>% 
+  filter(!str_detect(speaker,";.*;"), 
+         speaker != "NA") %>% 
+  select(speaker, text, url_txt) %>% kablebox()
+```
+
+---
+
+## Most frequent speakers from `r min(d$date)` to `r max(d$date)`
+
+```{r}
+d %>% 
+  filter(speaker != "NA") %>% 
+  count(speaker, sort = T) %>% head(20) %>% kablebox()
+```
+
+---
+
+## Multiple speakers?
+
+```{r}
+d %>% 
+  filter(str_detect(speaker, ";.*;")) %>% 
+  select(url_txt, speaker) %>% kablebox()
+```
+
+---
+
+## No speaker? 
+
+```{r}
+d %>% 
+  filter(speaker == "NA") %>% 
+  select(speaker, text, url_txt) %>% kablebox()
+```
+
+## To Do
+
+1. Exclude prayer, the pledge, the journal, resignation, adjournment, executive communications, announcements, communications, appointment, reappointment, recess, recall, designations, additional sponsors, and other proceedural sections.
+
+1. Parse sections with more than one speaker, starting with "[SPEAKER NAME]. (Mister|Madam) Speaker, ". For example, see the Impeachment speaches, where speakers yield time to other speakers.
+
+1. Check members with irregular capitalization beyond "Mc|Mac|Des|De|La"
+
+1. Match speaker names to ICPSR IDs like I did [here](https://judgelord.github.io/cr/speeches) for the hein-bound data using the crosswalk crated [here](https://judgelord.github.io/cr/member_data.html).
