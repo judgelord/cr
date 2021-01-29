@@ -53,7 +53,11 @@ kablebox <- . %>%
 
 Data scraped using this script: https://judgelord.github.io/cr/scraper.html
 
-```{r data, cache=TRUE}
+# Parse the Congressional Record
+
+### 0. Metadata from html
+```{r html-metadata, cache = TRUE}
+# Note, we don't need this metadata to parse the files
 # metadata
 load(here::here("data", "cr_metadata.Rdata"))
 
@@ -64,9 +68,12 @@ cr_metadata %<>%
            str_remove("-.*") %>% 
            str_to_title() %>%
            str_replace("Extensions", "Extensions of Remarks")) 
+```
 
 
+### 1. Metadata from file names
 
+```{r file-metadata, cache=TRUE}
 # load cr text file names
 cr <- list.files("/Users/devin/cr_bulk/data/htm")
 
@@ -76,23 +83,41 @@ d <- tibble(file = cr,
             date = str_extract(cr, "[0-9]{4}-[0-9]{2}-[0-9]{2}") %>% 
          as.Date() ) 
 
-d %<>% arrange(date) %>% arrange(rev(date))
+# get congress from year 
+d %<>% mutate(congress = as.numeric(round((year - 2001.1)/2)) + 107) # the 107th congress began in 2001
 
+# extract chamber from URL 
+d %<>% mutate(chamber = str_extract(file, "Pg.") %>% 
+                str_remove("Pg") %>%
+                str_replace("E", "Extensions of Remarks") %>% 
+                str_replace("H", "House") %>% 
+                str_replace("S", "Senate") )
 
-# reconstruct URLs
-d %<>% mutate(url_txt = str_c("https://www.congress.gov/117/crec/", 
-                          date %>% str_replace_all("-", "/"), 
+# reconstruct URLs from file names
+d %<>% mutate(url_txt = str_c("https://www.congress.gov/", congress, "/crec/", 
+                              date %>% str_replace_all("-", "/"), 
                           "/modified/", 
                           file))
 ```
 
-Just using a sample of documents for now
-```{r extract, cache=TRUE}
+
+
+### 2. Read in text
+
+> I'm just using a sample of documents for now.
+
+```{r}
 #FIXME
 # just using a few documents for now
-d %<>% top_n(10000, date)
+# d %<>% top_n(22, date)
+
+d %<>% filter(date == as.Date("2018-03-08") )
+
+d <- d[1:30, ]
 # /FIXME
 
+
+# TEXT AND TEXT VARS 
 
 # a function to get the first bit of text
 head_text <- function(file){
@@ -107,11 +132,38 @@ head_text <- function(file){
   return(text)
 }
 
+# a function to get all text
+all_text <- function(file){
+
+  text <- read_lines(str_c("/Users/devin/cr_bulk/data/htm/", file)) %>% 
+    str_c(collapse = " ") %>% 
+    str_squish() %>% 
+    str_remove(".*?www.gpo.gov</a>\\] ") 
+
+  return(text)
+}
+
 ## test
 # head_text(d$file[5])
 
+# the first bit of text
+d$text_head <- d$file %>% map_chr(possibly(head_text, otherwise = "")) 
+
+# fill in proceedural roles
+d %<>% 
+  mutate(process = str_extract(text_head, "^(ANNOUNCEMENT|RECESS|PRAYER|PLEDGE|MESSAGE|EXECUTIVE MESSAGE|EXECUTIVE COMMUNICATION|EXECUTIVE AND OTHER COMMUNICATION|MEASURE|ADJOURNMENT|DESIGNATION|THE JOURNAL|RESIGNATION|ELECTING|CONSTITUTIONAL|ADDITIONAL SPONSORS|SWEARING IN|MOMENT OF SILENCE|SENATE COMMITTEE MEETING|BUDGETARY|EFFECTS|REAPPOINTMENT|APPOINTMENT|RECALL|COMMUNICATION|REMOTE COMMITTEE PROCEEDINGS|REMOTE VOTING||ENROLLED BILL|ADDITIONAL COSPONSORS|DISCHARGED NOMINATION|CONFIRMATION|JOINT RESOLUTION|SENATE ENROLLED BILLS|PUBLICATION|EXPLANATORY STATEMENT|WITHDRAWAL)") )  
 
 
+
+# order by date (just for presentation)
+d %<>% arrange(date) %>% arrange(rev(date))
+```
+
+
+
+### 3. Extract speaker names from text
+
+```{r extract}
 # Extract speaker names
 
 # a function to grab speaker names
@@ -127,37 +179,99 @@ extract_names <- function(file){
     str_squish()
   text
   
-  if( str_detect(text, names) ){
+  #if( str_detect(text, names) ){
      text %<>%
       str_extract_all(names) %>% 
       unlist() %>% 
       # drop first letter of first sentence
       str_remove("\\. [A-Z]$|\\.$") %>% 
       str_squish() %>% 
-      unique() %>% 
-      str_c(collapse = ";") %>% 
-      str_sub(0, 240)
-  } else {
-    text <- NA
-  }
+      #unique() %>% 
+      #str_sub(0, 240) %>% # trim just in case pattern overmatches
+      str_c(collapse = ";") 
+  #} else {
+  #  text <- NA
+  #}
     
   return(text)
 }
 
 ## Test
-# extract_names(d$file[46])
+# extract_names(d$file[22])
 
 d %<>%
-  mutate(speaker = file %>% map_chr(possibly(extract_names, otherwise = "")))
+  mutate(speaker = file %>% map_chr(possibly(extract_names, otherwise = "404error")),
+         speaker = coalesce(speaker, process))
+```
 
-# the first bit of text
-d$text <- d$file %>% map_chr(possibly(head_text, otherwise = ""))
+---
+
+#### Multiple speakers?
+
+```{r, cache=FALSE}
+d %>% 
+  filter(str_detect(speaker, ";")) %>% 
+  select(speaker, url_txt) %>% kablebox()
+```
+
+---
+
+#### No speaker? 
+
+```{r, cache=FALSE}
+d %>% 
+  filter(is.na(speaker)|speaker == "") %>% 
+  select(speaker, text_head, url_txt) %>% kablebox()
+```
 
 
-# fill in proceedural roles
-d %<>% 
-  mutate(process = str_extract(text, "^(ANNOUNCEMENT|RECESS|PRAYER|PLEDGE|MESSAGE|EXECUTIVE MESSAGE|EXECUTIVE COMMUNICATION|EXECUTIVE AND OTHER COMMUNICATION|MEASURE|ADJOURNMENT|DESIGNATION|THE JOURNAL|RESIGNATION|ELECTING|CONSTITUTIONAL|ADDITIONAL SPONSORS|SWEARING IN|MOMENT OF SILENCE|SENATE COMMITTEE MEETING|BUDGETARY|EFFECTS|REAPPOINTMENT|APPOINTMENT|RECALL|COMMUNICATION|REMOTE COMMITTEE PROCEEDINGS|REMOTE VOTING||ENROLLED BILL|ADDITIONAL COSPONSORS|DISCHARGED NOMINATION|CONFIRMATION|JOINT RESOLUTION|SENATE ENROLLED BILLS|PUBLICATION|EXPLANATORY STATEMENT|WITHDRAWAL)"),
-         speaker = coalesce(speaker, process) )
+### 4. Parse texts with multiple speakers
+
+```{r}
+# a function to parse files with more than one speaker
+# for testing
+# speakers <- d$speaker[22] 
+# file <- d$file[22]
+parse <- function(speakers, file){
+  speakers %<>% str_split(";") %>% unlist()
+  
+  text <- all_text(file) # all text
+  
+  speech <- NA # init
+  
+  for(i in 1:length(speakers)){
+    
+    # add one to speakers vector to mark the end of the last speach
+    s <- c(speakers, "$")
+
+    # speech of speaker i
+    speech[i] <- text %>% 
+      str_extract(str_c(s[i],".*?", s[i+1])) %>% str_remove(s[i+1]) 
+    
+    # remove speech i from text
+    text %<>% 
+      str_remove(str_c(".*?", s[i], "$")) 
+  }
+  return( list(speech) )
+}
+
+## test
+# parse(d$speaker[1], d$file[1])
+
+d$text <- map2(.x = d$speaker,
+               .y = d$file, 
+               .f = parse) %>% flatten()
+
+# split speakers into a list 
+d$speaker %<>% str_split(";")
+
+# unnest
+d %<>% unnest(c(speaker, text)) 
+
+d %<>% distinct()
+
+
+
 
 
 
@@ -168,46 +282,34 @@ d %<>%
 ############################################
 # join metadata to file names 
 #FIXME for some reason, urls without a -[1-9] at the end seem to be missing from the metadata
-d %<>% left_join(cr_metadata) 
+
+## Commented out because we don't need html metadata to parse
+# d %<>% left_join(cr_metadata) 
+
+d %<>% mutate(text_head = text %>% 
+                str_sub(0,500) %>% 
+                str_c("...") )
 
 d %>% 
   filter(!str_detect(speaker,";.*;"), 
          !is.na(speaker) ) %>% 
-  select(speaker, text, url_txt) %>% kablebox()
+  select(speaker, text_head, url_txt) %>% kablebox()
 ```
 
 ---
 
-## Most frequent speakers from `r min(d$date)` to `r max(d$date)`
+### Most frequent speakers from `r min(d$date)` to `r max(d$date)`
 
 ```{r, cache=FALSE}
 d %>% 
   count(speaker, sort = T) %>% kablebox()
 ```
 
----
 
-## Multiple speakers?
-
-```{r, cache=FALSE}
-d %>% 
-  filter(str_detect(speaker, ";.*;")) %>% 
-  select(url_txt, speaker) %>% kablebox()
-```
-
----
-
-## No speaker? 
-
-```{r, cache=FALSE}
-d %>% 
-  filter(is.na(speaker)) %>% 
-  select(speaker, text, url_txt) %>% kablebox()
-```
 
 # Match with voteview 
 
-```{r, eval = FALSE}
+```{r}
 # Devin's members data (expanded from voteview)
 load(here("data", "members.Rdata"))
 
@@ -217,23 +319,37 @@ source(here("code", "nameMethods.R"))
 # common typos and known permutations and nicknames 
 source(here("code", "MemberNameTypos.R"))
 
-speakers1 <- d %>% extractMemberName(col_name = "speaker", members = members)
+# get congress from year 
+d %<>% mutate(congress = as.numeric(round((year - 2001.1)/2)) + 107) # the 107th congress began in 2001
 
-# FIXME, overmatches party switchers (and maybe others)
-crosswalk <- speakers1 %>% 
-  select(speaker, speakerid, icpsr, bioname, congress, chamber, nonvoting) %>%
-  distinct()  %>% 
-  left_join(members %>% 
-              select(icpsr, congress, chamber, state_abbrev, party_name, district_code)) %>%
-  distinct()
+# clean up speaker names and add chamber titles for better matching
+d %<>% mutate(chamber = ifelse(
+  chamber == "Extensions of Remarks" &
+    str_detect(text_head, "(Mr|Mrs|Ms|Miss)\\. Speaker\\,|in the house of representatives"), "House", "Senate"),
+              speaker = speaker %>% 
+    str_remove("(^|;)(Mr|Mrs|Ms|Miss|HON)(\\.| )") %>% 
+    str_squish())
+
+d %<>% mutate(speaker =
+               ifelse(row_number() > 1 & str_detect(lag(speaker),
+                                 speaker), 
+                      lag(speaker),
+                      speaker)) 
+
+
+d1 <- d %>% extractMemberName(col_name = "speaker", members = members)
+
+d1 %>% 
+  select(speaker, bioname, icpsr, chamber) %>%
+  distinct() %>% kablebox()
 ```
 
 ## To Do
 
-[x] Exclude prayer, the pledge, the journal, resignation, adjournment, executive communications, announcements, communications, appointment, reappointment, recess, recall, designations, additional sponsors, and other proceedural sections.
+- [x] Exclude prayer, the pledge, the journal, resignation, adjournment, executive communications, announcements, communications, appointment, reappointment, recess, recall, designations, additional sponsors, and other proceedural sections.
 
-[ ] Parse sections with more than one speaker, starting with "[SPEAKER NAME]. (Mister|Madam) Speaker, ". For example, see the Impeachment speaches, where speakers yield time to other speakers.
+- [x] Parse sections with more than one speaker, starting with "[SPEAKER NAME]. (Mister|Madam) Speaker, ". For example, see the Impeachment speaches, where speakers yield time to other speakers.
 
-[ ] Check members with irregular capitalization beyond "Mc|Mac|Des|De|La"
+- [ ] Check members with irregular capitalization beyond "Mc|Mac|Des|De|La"
 
-[ ] Match speaker names to ICPSR IDs like I did [here](https://judgelord.github.io/cr/speeches) for the hein-bound data using the crosswalk crated [here](https://judgelord.github.io/cr/member_data.html).
+- [x] Match speaker names to ICPSR IDs like I did [here](https://judgelord.github.io/cr/speeches) for the hein-bound data using the crosswalk crated [here](https://judgelord.github.io/cr/member_data.html).
