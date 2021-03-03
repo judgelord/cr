@@ -1896,26 +1896,26 @@ div.tocify {
 <div id="metadata-from-file-names" class="section level3">
 <h3>1. Metadata from file names</h3>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a><span class="co"># load cr text file names</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true"></a>cr &lt;-<span class="st"> </span><span class="kw">list.files</span>(<span class="st">&quot;/Users/devin/cr_bulk/data/htm&quot;</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true"></a>cr_file &lt;-<span class="st"> </span><span class="kw">list.files</span>(<span class="st">&quot;/Users/devin/cr_bulk/data/htm&quot;</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true"></a></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true"></a><span class="co"># extract date from file name</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true"></a>d &lt;-<span class="st"> </span><span class="kw">tibble</span>(<span class="dt">file =</span> cr,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true"></a>            <span class="dt">year =</span> <span class="kw">str_extract</span>(cr, <span class="st">&quot;[0-9]{4}&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">as.numeric</span>(),</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true"></a>            <span class="dt">date =</span> <span class="kw">str_extract</span>(cr, <span class="st">&quot;[0-9]{4}-[0-9]{2}-[0-9]{2}&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true"></a><span class="st">         </span><span class="kw">as.Date</span>() ) </span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true"></a>cr &lt;-<span class="st"> </span><span class="kw">tibble</span>(<span class="dt">file =</span> cr_file,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true"></a>            <span class="dt">year =</span> <span class="kw">str_extract</span>(cr_file, <span class="st">&quot;[0-9]{4}&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">as.numeric</span>(),</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true"></a>            <span class="dt">date =</span> <span class="kw">str_extract</span>(cr_file, <span class="st">&quot;[0-9]{4}-[0-9]{2}-[0-9]{2}&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true"></a><span class="st">              </span><span class="kw">as.Date</span>() ) </span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true"></a></span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true"></a><span class="co"># get congress from year </span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">congress =</span> <span class="kw">as.numeric</span>(<span class="kw">round</span>((year <span class="op">-</span><span class="st"> </span><span class="fl">2001.1</span>)<span class="op">/</span><span class="dv">2</span>)) <span class="op">+</span><span class="st"> </span><span class="dv">107</span>) <span class="co"># the 107th congress began in 2001</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true"></a>cr <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">congress =</span> <span class="kw">as.numeric</span>(<span class="kw">round</span>((year <span class="op">-</span><span class="st"> </span><span class="fl">2001.1</span>)<span class="op">/</span><span class="dv">2</span>)) <span class="op">+</span><span class="st"> </span><span class="dv">107</span>) <span class="co"># the 107th congress began in 2001</span></span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true"></a></span>
 <span id="cb2-13"><a href="#cb2-13" aria-hidden="true"></a><span class="co"># extract chamber from URL </span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">chamber =</span> <span class="kw">str_extract</span>(file, <span class="st">&quot;Pg.&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true"></a>cr <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">chamber =</span> <span class="kw">str_extract</span>(file, <span class="st">&quot;Pg.&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true"></a><span class="st">                </span><span class="kw">str_remove</span>(<span class="st">&quot;Pg&quot;</span>) <span class="op">%&gt;%</span></span>
 <span id="cb2-16"><a href="#cb2-16" aria-hidden="true"></a><span class="st">                </span><span class="kw">str_replace</span>(<span class="st">&quot;E&quot;</span>, <span class="st">&quot;Extensions of Remarks&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb2-17"><a href="#cb2-17" aria-hidden="true"></a><span class="st">                </span><span class="kw">str_replace</span>(<span class="st">&quot;H&quot;</span>, <span class="st">&quot;House&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true"></a><span class="st">                </span><span class="kw">str_replace</span>(<span class="st">&quot;S&quot;</span>, <span class="st">&quot;Senate&quot;</span>) )</span>
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true"></a></span>
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true"></a><span class="co"># reconstruct URLs from file names</span></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">url_txt =</span> <span class="kw">str_c</span>(<span class="st">&quot;https://www.congress.gov/&quot;</span>, congress, <span class="st">&quot;/crec/&quot;</span>, </span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true"></a>cr <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">url_txt =</span> <span class="kw">str_c</span>(<span class="st">&quot;https://www.congress.gov/&quot;</span>, congress, <span class="st">&quot;/crec/&quot;</span>, </span>
 <span id="cb2-22"><a href="#cb2-22" aria-hidden="true"></a>                              date <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">str_replace_all</span>(<span class="st">&quot;-&quot;</span>, <span class="st">&quot;/&quot;</span>), </span>
 <span id="cb2-23"><a href="#cb2-23" aria-hidden="true"></a>                          <span class="st">&quot;/modified/&quot;</span>, </span>
 <span id="cb2-24"><a href="#cb2-24" aria-hidden="true"></a>                          file))</span></code></pre></div>
@@ -1923,13 +1923,13 @@ div.tocify {
 <div id="read-in-text" class="section level3">
 <h3>2. Read in text</h3>
 <blockquote>
-<p>I’m just using a sample of documents for now.</p>
+<p>NOTE: I’m just using a sample of documents for now.</p>
 </blockquote>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a><span class="co">#FIXME</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true"></a><span class="co"># just using a few documents for now</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true"></a><span class="co"># d %&lt;&gt;% top_n(22, date)</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true"></a></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">filter</span>(date <span class="op">==</span><span class="st"> </span><span class="kw">as.Date</span>(<span class="st">&quot;2018-03-08&quot;</span>) )</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true"></a>d &lt;-<span class="st"> </span><span class="kw">filter</span>(cr, date <span class="op">==</span><span class="st"> </span><span class="kw">as.Date</span>(<span class="st">&quot;2018-03-08&quot;</span>) )</span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true"></a></span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true"></a>d &lt;-<span class="st"> </span>d[<span class="dv">1</span><span class="op">:</span><span class="dv">30</span>, ]</span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true"></a><span class="co"># /</span><span class="al">FIXME</span></span>
@@ -1967,7 +1967,7 @@ div.tocify {
 <span id="cb3-40"><a href="#cb3-40" aria-hidden="true"></a><span class="co"># the first bit of text</span></span>
 <span id="cb3-41"><a href="#cb3-41" aria-hidden="true"></a>d<span class="op">$</span>text_head &lt;-<span class="st"> </span>d<span class="op">$</span>file <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">map_chr</span>(<span class="kw">possibly</span>(head_text, <span class="dt">otherwise =</span> <span class="st">&quot;&quot;</span>)) </span>
 <span id="cb3-42"><a href="#cb3-42" aria-hidden="true"></a></span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true"></a><span class="co"># fill in proceedural roles</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true"></a><span class="co"># fill in procedural roles</span></span>
 <span id="cb3-44"><a href="#cb3-44" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span></span>
 <span id="cb3-45"><a href="#cb3-45" aria-hidden="true"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">process =</span> <span class="kw">str_extract</span>(text_head, <span class="st">&quot;^(ANNOUNCEMENT|RECESS|PRAYER|PLEDGE|MESSAGE|EXECUTIVE MESSAGE|EXECUTIVE COMMUNICATION|EXECUTIVE AND OTHER COMMUNICATION|MEASURE|ADJOURNMENT|DESIGNATION|THE JOURNAL|RESIGNATION|ELECTING|CONSTITUTIONAL|ADDITIONAL SPONSORS|SWEARING IN|MOMENT OF SILENCE|SENATE COMMITTEE MEETING|BUDGETARY|EFFECTS|REAPPOINTMENT|APPOINTMENT|RECALL|COMMUNICATION|REMOTE COMMITTEE PROCEEDINGS|REMOTE VOTING||ENROLLED BILL|ADDITIONAL COSPONSORS|DISCHARGED NOMINATION|CONFIRMATION|JOINT RESOLUTION|SENATE ENROLLED BILLS|PUBLICATION|EXPLANATORY STATEMENT|WITHDRAWAL)&quot;</span>) )  </span>
 <span id="cb3-46"><a href="#cb3-46" aria-hidden="true"></a></span>
@@ -2324,42 +2324,48 @@ PRAYER Pastor Tony Perkins, Greenwell Springs Baptist Church, Greenwell Springs,
 <span id="cb7-28"><a href="#cb7-28" aria-hidden="true"></a><span class="co">## test</span></span>
 <span id="cb7-29"><a href="#cb7-29" aria-hidden="true"></a><span class="co"># parse(d$speaker[1], d$file[1])</span></span>
 <span id="cb7-30"><a href="#cb7-30" aria-hidden="true"></a></span>
-<span id="cb7-31"><a href="#cb7-31" aria-hidden="true"></a>d<span class="op">$</span>text &lt;-<span class="st"> </span><span class="kw">map2</span>(<span class="dt">.x =</span> d<span class="op">$</span>speaker,</span>
-<span id="cb7-32"><a href="#cb7-32" aria-hidden="true"></a>               <span class="dt">.y =</span> d<span class="op">$</span>file, </span>
-<span id="cb7-33"><a href="#cb7-33" aria-hidden="true"></a>               <span class="dt">.f =</span> parse) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">flatten</span>()</span>
-<span id="cb7-34"><a href="#cb7-34" aria-hidden="true"></a></span>
-<span id="cb7-35"><a href="#cb7-35" aria-hidden="true"></a><span class="co"># split speakers into a list </span></span>
-<span id="cb7-36"><a href="#cb7-36" aria-hidden="true"></a>d<span class="op">$</span>speaker <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">str_split</span>(<span class="st">&quot;;&quot;</span>)</span>
-<span id="cb7-37"><a href="#cb7-37" aria-hidden="true"></a></span>
-<span id="cb7-38"><a href="#cb7-38" aria-hidden="true"></a><span class="co"># unnest</span></span>
-<span id="cb7-39"><a href="#cb7-39" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">unnest</span>(<span class="kw">c</span>(speaker, text)) </span>
-<span id="cb7-40"><a href="#cb7-40" aria-hidden="true"></a></span>
-<span id="cb7-41"><a href="#cb7-41" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">distinct</span>()</span>
-<span id="cb7-42"><a href="#cb7-42" aria-hidden="true"></a></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true"></a>parse_text &lt;-<span class="st"> </span><span class="cf">function</span>(d){</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true"></a>d<span class="op">$</span>text &lt;-<span class="st"> </span><span class="kw">map2</span>(<span class="dt">.x =</span> d<span class="op">$</span>speaker,</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true"></a>               <span class="dt">.y =</span> d<span class="op">$</span>file, </span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true"></a>               <span class="dt">.f =</span> parse) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">flatten</span>()</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true"></a></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true"></a><span class="co"># split speakers into a list </span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true"></a>d<span class="op">$</span>speaker <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">str_split</span>(<span class="st">&quot;;&quot;</span>)</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true"></a></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true"></a><span class="co"># unnest</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">unnest</span>(<span class="kw">c</span>(speaker, text)) </span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true"></a></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">distinct</span>()</span>
 <span id="cb7-43"><a href="#cb7-43" aria-hidden="true"></a></span>
 <span id="cb7-44"><a href="#cb7-44" aria-hidden="true"></a></span>
 <span id="cb7-45"><a href="#cb7-45" aria-hidden="true"></a></span>
 <span id="cb7-46"><a href="#cb7-46" aria-hidden="true"></a></span>
 <span id="cb7-47"><a href="#cb7-47" aria-hidden="true"></a></span>
-<span id="cb7-48"><a href="#cb7-48" aria-hidden="true"></a><span class="co"># extract names</span></span>
-<span id="cb7-49"><a href="#cb7-49" aria-hidden="true"></a><span class="co"># cr_metadata %&lt;&gt;%</span></span>
-<span id="cb7-50"><a href="#cb7-50" aria-hidden="true"></a><span class="co">#   mutate(speaker = file %&gt;% map_chr(possibly(extract_names, otherwise = &quot;&quot;)))</span></span>
-<span id="cb7-51"><a href="#cb7-51" aria-hidden="true"></a></span>
-<span id="cb7-52"><a href="#cb7-52" aria-hidden="true"></a><span class="co">############################################</span></span>
-<span id="cb7-53"><a href="#cb7-53" aria-hidden="true"></a><span class="co"># join metadata to file names </span></span>
-<span id="cb7-54"><a href="#cb7-54" aria-hidden="true"></a><span class="co">#FIXME for some reason, urls without a -[1-9] at the end seem to be missing from the metadata</span></span>
-<span id="cb7-55"><a href="#cb7-55" aria-hidden="true"></a></span>
-<span id="cb7-56"><a href="#cb7-56" aria-hidden="true"></a><span class="co">## Commented out because we don&#39;t need html metadata to parse</span></span>
-<span id="cb7-57"><a href="#cb7-57" aria-hidden="true"></a><span class="co"># d %&lt;&gt;% left_join(cr_metadata) </span></span>
-<span id="cb7-58"><a href="#cb7-58" aria-hidden="true"></a></span>
-<span id="cb7-59"><a href="#cb7-59" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">text_head =</span> text <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb7-60"><a href="#cb7-60" aria-hidden="true"></a><span class="st">                </span><span class="kw">str_sub</span>(<span class="dv">0</span>,<span class="dv">500</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb7-61"><a href="#cb7-61" aria-hidden="true"></a><span class="st">                </span><span class="kw">str_c</span>(<span class="st">&quot;...&quot;</span>) )</span>
-<span id="cb7-62"><a href="#cb7-62" aria-hidden="true"></a></span>
-<span id="cb7-63"><a href="#cb7-63" aria-hidden="true"></a>d <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb7-64"><a href="#cb7-64" aria-hidden="true"></a><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span><span class="kw">str_detect</span>(speaker,<span class="st">&quot;;.*;&quot;</span>), </span>
-<span id="cb7-65"><a href="#cb7-65" aria-hidden="true"></a>         <span class="op">!</span><span class="kw">is.na</span>(speaker) ) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb7-66"><a href="#cb7-66" aria-hidden="true"></a><span class="st">  </span><span class="kw">select</span>(speaker, text_head, url_txt) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">kablebox</span>()</span></code></pre></div>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true"></a></span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true"></a><span class="co"># extract names</span></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true"></a><span class="co"># cr_metadata %&lt;&gt;%</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true"></a><span class="co">#   mutate(speaker = file %&gt;% map_chr(possibly(extract_names, otherwise = &quot;&quot;)))</span></span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true"></a></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true"></a><span class="co">############################################</span></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true"></a><span class="co"># join metadata to file names </span></span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true"></a><span class="co">#FIXME for some reason, urls without a -[1-9] at the end seem to be missing from the metadata</span></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true"></a></span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true"></a><span class="co">## Commented out because we don&#39;t need html metadata to parse</span></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true"></a><span class="co"># d %&lt;&gt;% left_join(cr_metadata) </span></span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true"></a></span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">text_head =</span> text <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true"></a><span class="st">                </span><span class="kw">str_sub</span>(<span class="dv">0</span>,<span class="dv">500</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true"></a><span class="st">                </span><span class="kw">str_c</span>(<span class="st">&quot;...&quot;</span>) )</span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true"></a></span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true"></a><span class="kw">return</span>(d)</span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true"></a>} <span class="co">#</span><span class="re">END</span><span class="co"> parse</span></span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true"></a></span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">parse_text</span>()</span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true"></a></span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true"></a>d <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true"></a><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span><span class="kw">str_detect</span>(speaker,<span class="st">&quot;;.*;&quot;</span>), </span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true"></a>         <span class="op">!</span><span class="kw">is.na</span>(speaker) ) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true"></a><span class="st">  </span><span class="kw">select</span>(speaker, text_head, url_txt) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">kablebox</span>()</span></code></pre></div>
 <div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:400px; ">
 <table class="table" style="margin-left: auto; margin-right: auto;">
 <thead>
@@ -3322,17 +3328,769 @@ House
 </tbody>
 </table>
 </div>
+</div>
+<div id="save-text-parsed-by-member-name" class="section level1">
+<h1>Save text parsed by member name</h1>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true"></a>cr_write &lt;-<span class="st"> </span><span class="cf">function</span>(cr_date){</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true"></a>d &lt;-<span class="st"> </span><span class="kw">filter</span>(cr, date <span class="op">==</span><span class="st"> </span><span class="kw">as.Date</span>(cr_date) )</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true"></a>d &lt;-<span class="st"> </span>d[<span class="dv">1</span><span class="op">:</span><span class="dv">30</span>, ]</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true"></a><span class="co"># the first bit of text (faster because proceedural titles area at the beginning, no need to search full text)</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true"></a>d<span class="op">$</span>text_head &lt;-<span class="st"> </span>d<span class="op">$</span>file <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">map_chr</span>(<span class="kw">possibly</span>(head_text, <span class="dt">otherwise =</span> <span class="st">&quot;&quot;</span>)) </span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true"></a><span class="co"># fill in proceedural roles</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">process =</span> <span class="kw">str_extract</span>(text_head, <span class="st">&quot;^(ANNOUNCEMENT|RECESS|PRAYER|PLEDGE|MESSAGE|EXECUTIVE MESSAGE|EXECUTIVE COMMUNICATION|EXECUTIVE AND OTHER COMMUNICATION|MEASURE|ADJOURNMENT|DESIGNATION|THE JOURNAL|RESIGNATION|ELECTING|CONSTITUTIONAL|ADDITIONAL SPONSORS|SWEARING IN|MOMENT OF SILENCE|SENATE COMMITTEE MEETING|BUDGETARY|EFFECTS|REAPPOINTMENT|APPOINTMENT|RECALL|COMMUNICATION|REMOTE COMMITTEE PROCEEDINGS|REMOTE VOTING||ENROLLED BILL|ADDITIONAL COSPONSORS|DISCHARGED NOMINATION|CONFIRMATION|JOINT RESOLUTION|SENATE ENROLLED BILLS|PUBLICATION|EXPLANATORY STATEMENT|WITHDRAWAL)&quot;</span>) )  </span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">speaker =</span> file <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">map_chr</span>(<span class="kw">possibly</span>(extract_names, <span class="dt">otherwise =</span> <span class="st">&quot;404error&quot;</span>)),</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true"></a>         <span class="dt">speaker =</span> <span class="kw">coalesce</span>(speaker, process))</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">parse_text</span>()</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true"></a></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">speaker =</span> file <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">map_chr</span>(<span class="kw">possibly</span>(extract_names, <span class="dt">otherwise =</span> <span class="st">&quot;404error&quot;</span>)),</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true"></a>         <span class="dt">speaker =</span> <span class="kw">coalesce</span>(speaker, process))</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true"></a></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true"></a><span class="co"># get congress from year </span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">congress =</span> <span class="kw">as.numeric</span>(<span class="kw">round</span>((year <span class="op">-</span><span class="st"> </span><span class="fl">2001.1</span>)<span class="op">/</span><span class="dv">2</span>)) <span class="op">+</span><span class="st"> </span><span class="dv">107</span>) <span class="co"># the 107th congress began in 2001</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true"></a></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true"></a><span class="co"># clean up speaker names and add chamber titles for better matching</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">chamber =</span> <span class="kw">ifelse</span>(</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true"></a>  chamber <span class="op">==</span><span class="st"> &quot;Extensions of Remarks&quot;</span> <span class="op">&amp;</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true"></a><span class="st">    </span><span class="kw">str_detect</span>(text_head, <span class="st">&quot;(Mr|Mrs|Ms|Miss)</span><span class="ch">\\</span><span class="st">. Speaker</span><span class="ch">\\</span><span class="st">,|in the house of representatives&quot;</span>), <span class="st">&quot;House&quot;</span>, <span class="st">&quot;Senate&quot;</span>),</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true"></a>  <span class="dt">speaker =</span> speaker <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true"></a><span class="st">    </span><span class="kw">str_remove</span>(<span class="st">&quot;(^|;)(Mr|Mrs|Ms|Miss|HON)(</span><span class="ch">\\</span><span class="st">.| )&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true"></a><span class="st">    </span><span class="kw">str_squish</span>() )</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true"></a></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true"></a>d <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">speaker =</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true"></a>               <span class="kw">ifelse</span>(<span class="kw">row_number</span>() <span class="op">&gt;</span><span class="st"> </span><span class="dv">1</span> <span class="op">&amp;</span><span class="st"> </span><span class="kw">str_detect</span>(<span class="kw">lag</span>(speaker),</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true"></a>                                 speaker), </span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true"></a>                      <span class="kw">lag</span>(speaker),</span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true"></a>                      speaker)) </span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true"></a></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true"></a></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true"></a>d1 &lt;-<span class="st"> </span>d <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">extractMemberName</span>(<span class="dt">col_name =</span> <span class="st">&quot;speaker&quot;</span>, <span class="dt">members =</span> members)</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true"></a></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true"></a><span class="co"># fill in empty</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true"></a>d1 <span class="op">%&lt;&gt;%</span><span class="st"> </span></span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">file =</span> file <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">replace_na</span>(<span class="st">&quot;CREC-missing&quot;</span>),</span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true"></a>         <span class="dt">icpsr =</span> icpsr <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">replace_na</span>(<span class="st">&quot;NA&quot;</span>))</span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true"></a></span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true"></a>d1 <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">path =</span> <span class="kw">str_c</span>(<span class="st">&quot;data&quot;</span>, </span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true"></a>               <span class="st">&quot;txt&quot;</span>, </span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true"></a>               year, </span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true"></a>               icpsr, </span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true"></a>               <span class="kw">str_c</span>(file <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">str_remove</span>(<span class="st">&quot;.htm&quot;</span>), </span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true"></a>                     <span class="st">&quot;-&quot;</span>, ID, <span class="st">&quot;-&quot;</span>, icpsr, <span class="st">&quot;.txt&quot;</span>),</span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true"></a>               <span class="dt">sep =</span> <span class="st">&quot;/&quot;</span>  ))</span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true"></a></span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true"></a><span class="co"># make missing directories</span></span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true"></a>make_dir &lt;-<span class="st"> </span><span class="cf">function</span>(x){</span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true"></a><span class="cf">if</span>(<span class="op">!</span><span class="kw">dir.exists</span>(x)){<span class="kw">dir.create</span>(x)}</span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true"></a>}</span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true"></a></span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true"></a><span class="kw">walk</span>(<span class="kw">str_remove</span>(d1<span class="op">$</span>path, <span class="st">&quot;/CREC.*&quot;</span>),</span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true"></a>     <span class="dt">.f =</span> make_dir)</span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true"></a></span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true"></a><span class="co">## May want to change directory </span></span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true"></a><span class="co"># here(other_dir) %&gt;% str_remove(&quot;project_root/&quot;)</span></span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true"></a></span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true"></a><span class="co"># save</span></span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true"></a><span class="kw">walk2</span>(d1<span class="op">$</span>text,</span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true"></a>      here<span class="op">::</span><span class="kw">here</span>(d1<span class="op">$</span>path),</span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true"></a>      <span class="dt">.f =</span> write_lines)</span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true"></a>}</span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true"></a></span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true"></a><span class="co">## One day of the CR</span></span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true"></a><span class="co"># cr_write(&quot;2020-02-06&quot;)</span></span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true"></a></span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true"></a><span class="co">## Many days of the CR (e.g. feburary 2020)</span></span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true"></a>dates &lt;-<span class="st"> </span>cr <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(<span class="kw">str_detect</span>(date, <span class="st">&quot;2020-02&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">distinct</span>(date)</span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true"></a></span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true"></a><span class="kw">walk</span>(dates,</span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true"></a>    cr_write)</span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true"></a></span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true"></a><span class="kw">list.files</span>(here<span class="op">::</span><span class="kw">here</span>(<span class="st">&quot;data&quot;</span>, <span class="st">&quot;txt&quot;</span>), <span class="dt">recursive =</span> T) </span></code></pre></div>
+<div id="directory-structure-for-parsed-txt" class="section level2">
+<h2>Directory structure for parsed txt</h2>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true"></a><span class="co"># fill in empty</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true"></a>d1 <span class="op">%&lt;&gt;%</span><span class="st"> </span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">file =</span> file <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">replace_na</span>(<span class="st">&quot;CREC-missing&quot;</span>),</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true"></a>         <span class="dt">icpsr =</span> icpsr <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">as.integer</span>() <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">replace_na</span>(<span class="dv">00000</span>))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true"></a>d1 <span class="op">%&lt;&gt;%</span><span class="st"> </span><span class="kw">mutate</span>(<span class="dt">path =</span> <span class="kw">str_c</span>(<span class="st">&quot;data&quot;</span>, </span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true"></a>               <span class="st">&quot;txt&quot;</span>, </span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true"></a>               year, </span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true"></a>               icpsr, </span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true"></a>               <span class="kw">str_c</span>(file <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">str_remove</span>(<span class="st">&quot;.htm&quot;</span>), </span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true"></a>                     <span class="st">&quot;-&quot;</span>, ID, <span class="st">&quot;-&quot;</span>, icpsr, <span class="st">&quot;.txt&quot;</span>),</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true"></a>               <span class="dt">sep =</span> <span class="st">&quot;/&quot;</span>  ))</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true"></a></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true"></a>d1 <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true"></a><span class="st">  </span><span class="kw">left_join</span>(members)<span class="op">%&gt;%</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true"></a><span class="st">  </span><span class="kw">select</span>(bioname, cqlabel, path) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">kablebox</span>()</span></code></pre></div>
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:400px; ">
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+bioname
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+cqlabel
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;">
+path
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+BRAT, David A.
+</td>
+<td style="text-align:left;">
+(VA-07)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21553/CREC-2018-03-08-pt1-PgE279-2-000001-21553.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BRAT, David A.
+</td>
+<td style="text-align:left;">
+(VA-07)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21553/CREC-2018-03-08-pt1-PgE279-2-000002-21553.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SMITH, Christopher Henry
+</td>
+<td style="text-align:left;">
+(NJ-04)
+</td>
+<td style="text-align:left;">
+data/txt/2018/14863/CREC-2018-03-08-pt1-PgE279-3-000003-14863.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SMITH, Christopher Henry
+</td>
+<td style="text-align:left;">
+(NJ-04)
+</td>
+<td style="text-align:left;">
+data/txt/2018/14863/CREC-2018-03-08-pt1-PgE279-3-000004-14863.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+COLLINS, Doug
+</td>
+<td style="text-align:left;">
+(GA-09)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21323/CREC-2018-03-08-pt1-PgE280-2-000005-21323.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+COLLINS, Doug
+</td>
+<td style="text-align:left;">
+(GA-09)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21323/CREC-2018-03-08-pt1-PgE280-2-000006-21323.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CARTWRIGHT, Matt
+</td>
+<td style="text-align:left;">
+(PA-17)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21358/CREC-2018-03-08-pt1-PgE280-3-000007-21358.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CARTWRIGHT, Matt
+</td>
+<td style="text-align:left;">
+(PA-17)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21358/CREC-2018-03-08-pt1-PgE280-3-000008-21358.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+COHEN, Stephen
+</td>
+<td style="text-align:left;">
+(TN-09)
+</td>
+<td style="text-align:left;">
+data/txt/2018/20748/CREC-2018-03-08-pt1-PgE280-4-000009-20748.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+COHEN, Stephen
+</td>
+<td style="text-align:left;">
+(TN-09)
+</td>
+<td style="text-align:left;">
+data/txt/2018/20748/CREC-2018-03-08-pt1-PgE280-4-000010-20748.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+FUDGE, Marcia L.
+</td>
+<td style="text-align:left;">
+(OH-11)
+</td>
+<td style="text-align:left;">
+data/txt/2018/20941/CREC-2018-03-08-pt1-PgE280-000011-20941.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+FUDGE, Marcia L.
+</td>
+<td style="text-align:left;">
+(OH-11)
+</td>
+<td style="text-align:left;">
+data/txt/2018/20941/CREC-2018-03-08-pt1-PgE280-000012-20941.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+JACKSON LEE, Sheila
+</td>
+<td style="text-align:left;">
+(TX-18)
+</td>
+<td style="text-align:left;">
+data/txt/2018/29573/CREC-2018-03-08-pt1-PgE281-2-000013-29573.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+JACKSON LEE, Sheila
+</td>
+<td style="text-align:left;">
+(TX-18)
+</td>
+<td style="text-align:left;">
+data/txt/2018/29573/CREC-2018-03-08-pt1-PgE281-2-000014-29573.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ROYBAL-ALLARD, Lucille
+</td>
+<td style="text-align:left;">
+(CA-40)
+</td>
+<td style="text-align:left;">
+data/txt/2018/29317/CREC-2018-03-08-pt1-PgE281-000015-29317.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ROYBAL-ALLARD, Lucille
+</td>
+<td style="text-align:left;">
+(CA-40)
+</td>
+<td style="text-align:left;">
+data/txt/2018/29317/CREC-2018-03-08-pt1-PgE281-000016-29317.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+FASO, John J.
+</td>
+<td style="text-align:left;">
+(NY-19)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21716/CREC-2018-03-08-pt1-PgE282-2-000017-21716.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+FASO, John J.
+</td>
+<td style="text-align:left;">
+(NY-19)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21716/CREC-2018-03-08-pt1-PgE282-2-000018-21716.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LEVIN, Sander Martin
+</td>
+<td style="text-align:left;">
+(MI-09)
+</td>
+<td style="text-align:left;">
+data/txt/2018/15033/CREC-2018-03-08-pt1-PgE282-3-000019-15033.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+LEVIN, Sander Martin
+</td>
+<td style="text-align:left;">
+(MI-09)
+</td>
+<td style="text-align:left;">
+data/txt/2018/15033/CREC-2018-03-08-pt1-PgE282-3-000020-15033.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+DUNN, Neal Patrick
+</td>
+<td style="text-align:left;">
+(FL-02)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21714/CREC-2018-03-08-pt1-PgE282-000021-21714.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+DUNN, Neal Patrick
+</td>
+<td style="text-align:left;">
+(FL-02)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21714/CREC-2018-03-08-pt1-PgE282-000022-21714.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CORREA, Jose Luis
+</td>
+<td style="text-align:left;">
+(CA-46)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21711/CREC-2018-03-08-pt1-PgE283-2-000023-21711.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CORREA, Jose Luis
+</td>
+<td style="text-align:left;">
+(CA-46)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21711/CREC-2018-03-08-pt1-PgE283-2-000024-21711.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+COLLINS, Doug
+</td>
+<td style="text-align:left;">
+(GA-09)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21323/CREC-2018-03-08-pt1-PgE283-3-000025-21323.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+COLLINS, Doug
+</td>
+<td style="text-align:left;">
+(GA-09)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21323/CREC-2018-03-08-pt1-PgE283-3-000026-21323.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+JACKSON LEE, Sheila
+</td>
+<td style="text-align:left;">
+(TX-18)
+</td>
+<td style="text-align:left;">
+data/txt/2018/29573/CREC-2018-03-08-pt1-PgE283-4-000027-29573.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+JACKSON LEE, Sheila
+</td>
+<td style="text-align:left;">
+(TX-18)
+</td>
+<td style="text-align:left;">
+data/txt/2018/29573/CREC-2018-03-08-pt1-PgE283-4-000028-29573.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CLEAVER, Emanuel, II
+</td>
+<td style="text-align:left;">
+(MO-05)
+</td>
+<td style="text-align:left;">
+data/txt/2018/20517/CREC-2018-03-08-pt1-PgE283-000029-20517.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CLEAVER, Emanuel, II
+</td>
+<td style="text-align:left;">
+(MO-05)
+</td>
+<td style="text-align:left;">
+data/txt/2018/20517/CREC-2018-03-08-pt1-PgE283-000030-20517.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ROKITA, Todd
+</td>
+<td style="text-align:left;">
+(IN-04)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21131/CREC-2018-03-08-pt1-PgE284-2-000031-21131.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ROKITA, Todd
+</td>
+<td style="text-align:left;">
+(IN-04)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21131/CREC-2018-03-08-pt1-PgE284-2-000032-21131.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BARLETTA, Lou
+</td>
+<td style="text-align:left;">
+(PA-11)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21171/CREC-2018-03-08-pt1-PgE284-3-000033-21171.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BARLETTA, Lou
+</td>
+<td style="text-align:left;">
+(PA-11)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21171/CREC-2018-03-08-pt1-PgE284-3-000034-21171.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BROOKS, Mo
+</td>
+<td style="text-align:left;">
+(AL-05)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21193/CREC-2018-03-08-pt1-PgE284-4-000035-21193.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BROOKS, Mo
+</td>
+<td style="text-align:left;">
+(AL-05)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21193/CREC-2018-03-08-pt1-PgE284-4-000036-21193.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HASTINGS, Alcee Lamar
+</td>
+<td style="text-align:left;">
+(FL-20)
+</td>
+<td style="text-align:left;">
+data/txt/2018/29337/CREC-2018-03-08-pt1-PgE284-000037-29337.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HASTINGS, Alcee Lamar
+</td>
+<td style="text-align:left;">
+(FL-20)
+</td>
+<td style="text-align:left;">
+data/txt/2018/29337/CREC-2018-03-08-pt1-PgE284-000038-29337.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+data/txt/2018/0/CREC-2018-03-08-pt1-PgE285-2-000039-0.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+data/txt/2018/0/CREC-2018-03-08-pt1-PgE285-2-000040-0.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MULLIN, Markwayne
+</td>
+<td style="text-align:left;">
+(OK-02)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21355/CREC-2018-03-08-pt1-PgE285-3-000041-21355.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MULLIN, Markwayne
+</td>
+<td style="text-align:left;">
+(OK-02)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21355/CREC-2018-03-08-pt1-PgE285-3-000042-21355.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+POCAN, Mark
+</td>
+<td style="text-align:left;">
+(WI-02)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21370/CREC-2018-03-08-pt1-PgE285-000043-21370.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+POCAN, Mark
+</td>
+<td style="text-align:left;">
+(WI-02)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21370/CREC-2018-03-08-pt1-PgE285-000044-21370.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ROYBAL-ALLARD, Lucille
+</td>
+<td style="text-align:left;">
+(CA-40)
+</td>
+<td style="text-align:left;">
+data/txt/2018/29317/CREC-2018-03-08-pt1-PgE286-000045-29317.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ROYBAL-ALLARD, Lucille
+</td>
+<td style="text-align:left;">
+(CA-40)
+</td>
+<td style="text-align:left;">
+data/txt/2018/29317/CREC-2018-03-08-pt1-PgE286-000046-29317.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+JACKSON LEE, Sheila
+</td>
+<td style="text-align:left;">
+(TX-18)
+</td>
+<td style="text-align:left;">
+data/txt/2018/29573/CREC-2018-03-08-pt1-PgE287-000047-29573.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+JACKSON LEE, Sheila
+</td>
+<td style="text-align:left;">
+(TX-18)
+</td>
+<td style="text-align:left;">
+data/txt/2018/29573/CREC-2018-03-08-pt1-PgE287-000048-29573.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+COLLINS, Doug
+</td>
+<td style="text-align:left;">
+(GA-09)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21323/CREC-2018-03-08-pt1-PgE288-000049-21323.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+COLLINS, Doug
+</td>
+<td style="text-align:left;">
+(GA-09)
+</td>
+<td style="text-align:left;">
+data/txt/2018/21323/CREC-2018-03-08-pt1-PgE288-000050-21323.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+data/txt/2018/0/CREC-2018-03-08-pt1-PgH1479-2-000051-0.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+data/txt/2018/0/CREC-2018-03-08-pt1-PgH1479-3-000052-0.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+data/txt/2018/0/CREC-2018-03-08-pt1-PgH1479-4-000053-0.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CAPUANO, Michael Everett
+</td>
+<td style="text-align:left;">
+(MA-07)
+</td>
+<td style="text-align:left;">
+data/txt/2018/29919/CREC-2018-03-08-pt1-PgH1479-4-000054-29919.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+data/txt/2018/0/CREC-2018-03-08-pt1-PgH1479-5-000055-0.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CHABOT, Steve
+</td>
+<td style="text-align:left;">
+(OH-01)
+</td>
+<td style="text-align:left;">
+data/txt/2018/29550/CREC-2018-03-08-pt1-PgH1479-6-000056-29550.txt
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CHABOT, Steve
+</td>
+<td style="text-align:left;">
+(OH-01)
+</td>
+<td style="text-align:left;">
+data/txt/2018/29550/CREC-2018-03-08-pt1-PgH1479-6-000057-29550.txt
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <div id="to-do" class="section level2">
 <h2>To Do</h2>
 <ul class="task-list">
 <li><p><input type="checkbox" disabled checked></input>
-Exclude prayer, the pledge, the journal, resignation, adjournment, executive communications, announcements, communications, appointment, reappointment, recess, recall, designations, additional sponsors, and other proceedural sections.</p></li>
+Exclude prayer, the pledge, the journal, resignation, adjournment, executive communications, announcements, communications, appointment, reappointment, recess, recall, designations, additional sponsors, and other proceedural sections. (These texts are parsed and saved in the “NA” folder.)</p></li>
 <li><p><input type="checkbox" disabled checked></input>
 Parse sections with more than one speaker, starting with “[SPEAKER NAME]. (Mister|Madam) Speaker,”. For example, see the Impeachment speaches, where speakers yield time to other speakers.</p></li>
 <li><p><input type="checkbox" disabled></input>
 Check members with irregular capitalization beyond “Mc|Mac|Des|De|La”</p></li>
 <li><p><input type="checkbox" disabled checked></input>
 Match speaker names to ICPSR IDs like I did <a href="https://judgelord.github.io/cr/speeches">here</a> for the hein-bound data using the crosswalk crated <a href="https://judgelord.github.io/cr/member_data.html">here</a>.</p></li>
+<li><p><input type="checkbox" disabled></input>
+Names to fix in function: Susan <em>W.</em> Brrooks</p></li>
 </ul>
 </div>
 </div>

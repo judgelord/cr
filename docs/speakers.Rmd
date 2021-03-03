@@ -75,26 +75,26 @@ cr_metadata %<>%
 
 ```{r file-metadata, cache=TRUE}
 # load cr text file names
-cr <- list.files("/Users/devin/cr_bulk/data/htm")
+cr_file <- list.files("/Users/devin/cr_bulk/data/htm")
 
 # extract date from file name
-d <- tibble(file = cr,
-            year = str_extract(cr, "[0-9]{4}") %>% as.numeric(),
-            date = str_extract(cr, "[0-9]{4}-[0-9]{2}-[0-9]{2}") %>% 
-         as.Date() ) 
+cr <- tibble(file = cr_file,
+            year = str_extract(cr_file, "[0-9]{4}") %>% as.numeric(),
+            date = str_extract(cr_file, "[0-9]{4}-[0-9]{2}-[0-9]{2}") %>% 
+              as.Date() ) 
 
 # get congress from year 
-d %<>% mutate(congress = as.numeric(round((year - 2001.1)/2)) + 107) # the 107th congress began in 2001
+cr %<>% mutate(congress = as.numeric(round((year - 2001.1)/2)) + 107) # the 107th congress began in 2001
 
 # extract chamber from URL 
-d %<>% mutate(chamber = str_extract(file, "Pg.") %>% 
+cr %<>% mutate(chamber = str_extract(file, "Pg.") %>% 
                 str_remove("Pg") %>%
                 str_replace("E", "Extensions of Remarks") %>% 
                 str_replace("H", "House") %>% 
                 str_replace("S", "Senate") )
 
 # reconstruct URLs from file names
-d %<>% mutate(url_txt = str_c("https://www.congress.gov/", congress, "/crec/", 
+cr %<>% mutate(url_txt = str_c("https://www.congress.gov/", congress, "/crec/", 
                               date %>% str_replace_all("-", "/"), 
                           "/modified/", 
                           file))
@@ -104,14 +104,14 @@ d %<>% mutate(url_txt = str_c("https://www.congress.gov/", congress, "/crec/",
 
 ### 2. Read in text
 
-> I'm just using a sample of documents for now.
+> NOTE: I'm just using a sample of documents for now.
 
 ```{r}
 #FIXME
 # just using a few documents for now
 # d %<>% top_n(22, date)
 
-d %<>% filter(date == as.Date("2018-03-08") )
+d <- filter(cr, date == as.Date("2018-03-08") )
 
 d <- d[1:30, ]
 # /FIXME
@@ -149,7 +149,7 @@ all_text <- function(file){
 # the first bit of text
 d$text_head <- d$file %>% map_chr(possibly(head_text, otherwise = "")) 
 
-# fill in proceedural roles
+# fill in procedural roles
 d %<>% 
   mutate(process = str_extract(text_head, "^(ANNOUNCEMENT|RECESS|PRAYER|PLEDGE|MESSAGE|EXECUTIVE MESSAGE|EXECUTIVE COMMUNICATION|EXECUTIVE AND OTHER COMMUNICATION|MEASURE|ADJOURNMENT|DESIGNATION|THE JOURNAL|RESIGNATION|ELECTING|CONSTITUTIONAL|ADDITIONAL SPONSORS|SWEARING IN|MOMENT OF SILENCE|SENATE COMMITTEE MEETING|BUDGETARY|EFFECTS|REAPPOINTMENT|APPOINTMENT|RECALL|COMMUNICATION|REMOTE COMMITTEE PROCEEDINGS|REMOTE VOTING||ENROLLED BILL|ADDITIONAL COSPONSORS|DISCHARGED NOMINATION|CONFIRMATION|JOINT RESOLUTION|SENATE ENROLLED BILLS|PUBLICATION|EXPLANATORY STATEMENT|WITHDRAWAL)") )  
 
@@ -258,6 +258,7 @@ parse <- function(speakers, file){
 ## test
 # parse(d$speaker[1], d$file[1])
 
+parse_text <- function(d){
 d$text <- map2(.x = d$speaker,
                .y = d$file, 
                .f = parse) %>% flatten()
@@ -289,6 +290,11 @@ d %<>% distinct()
 d %<>% mutate(text_head = text %>% 
                 str_sub(0,500) %>% 
                 str_c("...") )
+
+return(d)
+} #END parse
+
+d %<>% parse_text()
 
 d %>% 
   filter(!str_detect(speaker,";.*;"), 
@@ -344,12 +350,124 @@ d1 %>%
   distinct() %>% kablebox()
 ```
 
+
+# Save text parsed by member name
+
+
+```{r, eval=FALSE}
+cr_write <- function(cr_date){
+d <- filter(cr, date == as.Date(cr_date) )
+
+d <- d[1:30, ]
+
+# the first bit of text (faster because proceedural titles area at the beginning, no need to search full text)
+d$text_head <- d$file %>% map_chr(possibly(head_text, otherwise = "")) 
+
+# fill in proceedural roles
+d %<>% 
+  mutate(process = str_extract(text_head, "^(ANNOUNCEMENT|RECESS|PRAYER|PLEDGE|MESSAGE|EXECUTIVE MESSAGE|EXECUTIVE COMMUNICATION|EXECUTIVE AND OTHER COMMUNICATION|MEASURE|ADJOURNMENT|DESIGNATION|THE JOURNAL|RESIGNATION|ELECTING|CONSTITUTIONAL|ADDITIONAL SPONSORS|SWEARING IN|MOMENT OF SILENCE|SENATE COMMITTEE MEETING|BUDGETARY|EFFECTS|REAPPOINTMENT|APPOINTMENT|RECALL|COMMUNICATION|REMOTE COMMITTEE PROCEEDINGS|REMOTE VOTING||ENROLLED BILL|ADDITIONAL COSPONSORS|DISCHARGED NOMINATION|CONFIRMATION|JOINT RESOLUTION|SENATE ENROLLED BILLS|PUBLICATION|EXPLANATORY STATEMENT|WITHDRAWAL)") )  
+
+d %<>%
+  mutate(speaker = file %>% map_chr(possibly(extract_names, otherwise = "404error")),
+         speaker = coalesce(speaker, process))
+
+d %<>% parse_text()
+
+d %<>%
+  mutate(speaker = file %>% map_chr(possibly(extract_names, otherwise = "404error")),
+         speaker = coalesce(speaker, process))
+
+# get congress from year 
+d %<>% mutate(congress = as.numeric(round((year - 2001.1)/2)) + 107) # the 107th congress began in 2001
+
+# clean up speaker names and add chamber titles for better matching
+d %<>% mutate(chamber = ifelse(
+  chamber == "Extensions of Remarks" &
+    str_detect(text_head, "(Mr|Mrs|Ms|Miss)\\. Speaker\\,|in the house of representatives"), "House", "Senate"),
+  speaker = speaker %>% 
+    str_remove("(^|;)(Mr|Mrs|Ms|Miss|HON)(\\.| )") %>% 
+    str_squish() )
+
+d %<>% mutate(speaker =
+               ifelse(row_number() > 1 & str_detect(lag(speaker),
+                                 speaker), 
+                      lag(speaker),
+                      speaker)) 
+
+
+d1 <- d %>% extractMemberName(col_name = "speaker", members = members)
+
+# fill in empty
+d1 %<>% 
+  mutate(file = file %>% replace_na("CREC-missing"),
+         icpsr = icpsr %>% replace_na("NA"))
+
+d1 %<>% mutate(path = str_c("data", 
+               "txt", 
+               year, 
+               icpsr, 
+               str_c(file %>% str_remove(".htm"), 
+                     "-", ID, "-", icpsr, ".txt"),
+               sep = "/"  ))
+
+# make missing directories
+make_dir <- function(x){
+if(!dir.exists(x)){dir.create(x)}
+}
+
+walk(str_remove(d1$path, "/CREC.*"),
+     .f = make_dir)
+
+## May want to change directory 
+# here(other_dir) %>% str_remove("project_root/")
+
+# save
+walk2(d1$text,
+      here::here(d1$path),
+      .f = write_lines)
+}
+
+## One day of the CR
+# cr_write("2020-02-06")
+
+## Many days of the CR (e.g. feburary 2020)
+dates <- cr %>% filter(str_detect(date, "2020-02")) %>% distinct(date)
+
+walk(dates,
+    cr_write)
+
+list.files(here::here("data", "txt"), recursive = T) 
+```
+
+## Directory structure for parsed txt
+```{r}
+# fill in empty
+d1 %<>% 
+  mutate(file = file %>% replace_na("CREC-missing"),
+         icpsr = icpsr %>% as.integer() %>% replace_na(00000))
+
+d1 %<>% mutate(path = str_c("data", 
+               "txt", 
+               year, 
+               icpsr, 
+               str_c(file %>% str_remove(".htm"), 
+                     "-", ID, "-", icpsr, ".txt"),
+               sep = "/"  ))
+
+d1 %>% 
+  left_join(members)%>%
+  select(bioname, cqlabel, path) %>% kablebox()
+```
+
 ## To Do
 
-- [x] Exclude prayer, the pledge, the journal, resignation, adjournment, executive communications, announcements, communications, appointment, reappointment, recess, recall, designations, additional sponsors, and other proceedural sections.
+- [x] Exclude prayer, the pledge, the journal, resignation, adjournment, executive communications, announcements, communications, appointment, reappointment, recess, recall, designations, additional sponsors, and other proceedural sections. (These texts are parsed and saved in the "NA" folder.)
 
 - [x] Parse sections with more than one speaker, starting with "[SPEAKER NAME]. (Mister|Madam) Speaker, ". For example, see the Impeachment speaches, where speakers yield time to other speakers.
 
 - [ ] Check members with irregular capitalization beyond "Mc|Mac|Des|De|La"
 
 - [x] Match speaker names to ICPSR IDs like I did [here](https://judgelord.github.io/cr/speeches) for the hein-bound data using the crosswalk crated [here](https://judgelord.github.io/cr/member_data.html).
+
+- [ ] Names to fix in function: Susan *W.* Brrooks
+
