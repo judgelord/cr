@@ -74,8 +74,16 @@ cr_metadata %<>%
 ### 1. Metadata from file names
 
 ```{r file-metadata, cache=TRUE}
+# directory for bulk cr files 
+bulk_directory <- here::here("data", "htm") %>%
+  str_replace("cr", "cr_bulk")
+
 # load cr text file names
-cr_file <- list.files("/Users/devin/cr_bulk/data/htm")
+cr_file <- list.files(bulk_directory)
+
+file.size(cr_file %>% head() )
+
+# cr %<>% filter(file.info)
 
 # extract date from file name
 cr <- tibble(file = cr_file,
@@ -109,9 +117,10 @@ cr %<>% mutate(url_txt = str_c("https://www.congress.gov/", congress, "/crec/",
 ```{r}
 #FIXME
 # just using a few documents for now
-# d %<>% top_n(22, date)
+# d %<>% top_n(2, date)
 
 d <- filter(cr, date == as.Date("2018-03-08") )
+
 
 d <- d[1:30, ]
 # /FIXME
@@ -122,7 +131,7 @@ d <- d[1:30, ]
 # a function to get the first bit of text
 head_text <- function(file){
 
-  text <- read_lines(str_c("/Users/devin/cr_bulk/data/htm/", file)) %>% 
+  text <- read_lines(str_c(bulk_directory, "/", file)) %>% 
     str_c(collapse = " ") %>% 
     str_squish() %>% 
     str_remove(".*?www.gpo.gov</a>\\] ") %>% 
@@ -135,7 +144,7 @@ head_text <- function(file){
 # a function to get all text
 all_text <- function(file){
 
-  text <- read_lines(str_c("/Users/devin/cr_bulk/data/htm/", file)) %>% 
+  text <- read_lines(str_c(bulk_directory, "/", file)) %>% 
     str_c(collapse = " ") %>% 
     str_squish() %>% 
     str_remove(".*?www.gpo.gov</a>\\] ") 
@@ -174,7 +183,7 @@ extract_names <- function(file){
   # for testing 
   #file <- d$file[41]
   
-  text <- read_lines(str_c("/Users/devin/cr_bulk/data/htm/", file)) %>% 
+  text <- read_lines(str_c(bulk_directory, "/", file)) %>% 
     str_c(collapse = " ") %>% 
     str_squish()
   text
@@ -355,10 +364,17 @@ d1 %>%
 
 
 ```{r, eval=FALSE}
+# FOR TESTING 
+# cr_date <- "2018-02-06"
+
+# A function that reads raw data and writes parsed data
 cr_write <- function(cr_date){
 d <- filter(cr, date == as.Date(cr_date) )
 
+#FIXME add extensions after looking into why R was hanging
+d %<>% filter(chamber %in% c("House", "Senate"))
 d <- d[1:30, ]
+#/FIXME
 
 # the first bit of text (faster because proceedural titles area at the beginning, no need to search full text)
 d$text_head <- d$file %>% map_chr(possibly(head_text, otherwise = "")) 
@@ -431,12 +447,10 @@ walk2(d1$text,
 # cr_write("2020-02-06")
 
 ## Many days of the CR (e.g. feburary 2020)
-dates <- cr %>% filter(str_detect(date, "2020-02")) %>% distinct(date)
+dates <- cr %>% filter(str_detect(date, "2016-02")) %>% distinct(date)
 
 walk(dates,
     cr_write)
-
-list.files(here::here("data", "txt"), recursive = T) 
 ```
 
 ## Directory structure for parsed txt
