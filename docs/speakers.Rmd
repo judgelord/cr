@@ -209,8 +209,6 @@ extract_names <- function(file){
 d %<>%
   mutate(speaker = file %>% map_chr(possibly(extract_names, otherwise = "404error"))) %>% 
   mutate(speaker = ifelse(speaker == "", "404error", speaker))
-
-d$speaker
 ```
 
 ---
@@ -343,6 +341,7 @@ d1 %>%
 
 
 ```{r, eval=FALSE}
+#FIXME MOVE TO A FUNCTIONS SCRIPT WITH OTHER REQUIRED FUNCTIONS WHEN DONE TESTING 
 # FOR TESTING 
 # cr_date <- "2018-02-06"
 ## Many days of the CR (e.g. feburary 2020)
@@ -446,7 +445,7 @@ dates <- cr %>% #filter(str_detect(date, "2016-02")) %>%
 
 # Testing 
 cr_date <- dates$date[3]
-cr_date <- "2020-09-23"
+# cr_date <- "2020-09-23"
 cr_write(cr_date)
 
 # save all
