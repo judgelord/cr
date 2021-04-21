@@ -75,13 +75,12 @@ cr_metadata %<>%
 
 ```{r file-metadata, cache=TRUE}
 # directory for bulk cr files 
-bulk_directory <- here::here("data", "htm") %>%
-  str_replace("cr", "cr_bulk")
+bulk_directory <- here::here("data", "htm") #%>% str_replace("cr", "cr_bulk")
 
 # load cr text file names
 cr_file <- list.files(bulk_directory)
 
-file.size(cr_file %>% head() )
+file.size(here::here("data", "htm", cr_file[1:10] ))
 
 # cr %<>% filter(file.info)
 
@@ -115,14 +114,14 @@ cr %<>% mutate(url_txt = str_c("https://www.congress.gov/", congress, "/crec/",
 > NOTE: I'm just using a sample of documents for now.
 
 ```{r}
+d <- cr
+
 #FIXME
 # just using a few documents for now
-# d %<>% top_n(2, date)
 
-d <- filter(cr, date == as.Date("2018-03-08") )
+d %<>% top_n(cr, 2, date)
 
-
-d <- d[1:30, ]
+# d <- slice_head(cr, n = 30)
 # /FIXME
 
 
@@ -153,7 +152,9 @@ all_text <- function(file){
 }
 
 ## test
-# head_text(d$file[5])
+# file <- d$file[1]
+# head_text(file)
+# all_text(file)
 
 # the first bit of text
 d$text_head <- d$file %>% map_chr(possibly(head_text, otherwise = "")) 
@@ -178,39 +179,38 @@ d %<>% arrange(date) %>% arrange(rev(date))
 # a function to grab speaker names
 extract_names <- function(file){
   
-  names <- "(Mr.|Mrs.|Ms.|Miss|HON.) (([A-Z]|\\.| )* |-|)(Mc|Mac|Des|De|La|[A-Z])[A-Z][A-Z]+|The PRESIDING OFFICER|The SPEAKER\\.|The SPEAKER pro tempore \\(.*?\\)|The ACTING PRESIDENT|The VICE PRESIDENT"
+  speaker_names <- "(Mr.|Mrs.|Ms.|Miss|HON.) (([A-Z]|\\.| )* |-|)(Mc|Mac|Des|De|La|[A-Z])[A-Z][A-Z]+|The PRESIDING OFFICER|The SPEAKER\\.|The SPEAKER pro tempore \\(.*?\\)|The ACTING PRESIDENT|The VICE PRESIDENT"
   
   # for testing 
   #file <- d$file[41]
   
-  text <- read_lines(str_c(bulk_directory, "/", file)) %>% 
-    str_c(collapse = " ") %>% 
-    str_squish()
-  text
+  text <- all_text(file)
   
   #if( str_detect(text, names) ){
-     text %<>%
-      str_extract_all(names) %>% 
+     extracted_names <- text %>%
+      str_extract_all(speaker_names) %>% 
       unlist() %>% 
       # drop first letter of first sentence
       str_remove("\\. [A-Z]$|\\.$") %>% 
       str_squish() %>% 
-      #unique() %>% 
       #str_sub(0, 240) %>% # trim just in case pattern overmatches
       str_c(collapse = ";") 
   #} else {
   #  text <- NA
   #}
     
-  return(text)
+  return(extracted_names)
 }
 
 ## Test
+# file <- d$file[22]
 # extract_names(d$file[22])
 
 d %<>%
-  mutate(speaker = file %>% map_chr(possibly(extract_names, otherwise = "404error")),
-         speaker = coalesce(speaker, process))
+  mutate(speaker = file %>% map_chr(possibly(extract_names, otherwise = "404error"))) %>% 
+  mutate(speaker = ifelse(speaker == "", "404error", speaker))
+
+d$speaker
 ```
 
 ---
@@ -229,8 +229,8 @@ d %>%
 
 ```{r, cache=FALSE}
 d %>% 
-  filter(is.na(speaker)|speaker == "") %>% 
-  select(speaker, text_head, url_txt) %>% kablebox()
+  filter(is.na(speaker)|speaker == "404error") %>% 
+  select(speaker, process, text_head, url_txt) %>% kablebox()
 ```
 
 
@@ -239,62 +239,39 @@ d %>%
 ```{r}
 # a function to parse files with more than one speaker
 # for testing
-# speakers <- d$speaker[22] 
-# file <- d$file[22]
+# speakers <- d$speaker[26] 
+# file <- d$file[26]
 parse <- function(speakers, file){
-  speakers %<>% str_split(";") %>% unlist()
-  
+
   text <- all_text(file) # all text
   
-  speech <- NA # init
+  t <- text %>%  str_split(speakers %>% str_replace_all(";", "|") ) %>% unlist()
   
-  for(i in 1:length(speakers)){
-    
-    # add one to speakers vector to mark the end of the last speach
-    s <- c(speakers, "$")
+  s <- paste(c("header", speakers %<>% str_split(";") %>% unlist())) %>% str_c(" :::")
 
-    # speech of speaker i
-    speech[i] <- text %>% 
-      str_extract(str_c(s[i],".*?", s[i+1])) %>% str_remove(s[i+1]) 
-    
-    # remove speech i from text
-    text %<>% 
-      str_remove(str_c(".*?", s[i], "$")) 
-  }
-  return( list(speech) )
+  
+  speech <- map2(.x = s, 
+           .y = t, 
+           .f = paste)
+
+  return( speech )
 }
 
 ## test
-# parse(d$speaker[1], d$file[1])
+# parse(d$speaker[30], d$file[30])
 
 parse_text <- function(d){
 d$text <- map2(.x = d$speaker,
                .y = d$file, 
-               .f = parse) %>% flatten()
+               .f = parse) # %>% flatten()
 
-# split speakers into a list 
-d$speaker %<>% str_split(";")
 
-# unnest
-d %<>% unnest(c(speaker, text)) 
+d %<>% unnest(text)
 
 d %<>% distinct()
 
-
-
-
-
-
-# extract names
-# cr_metadata %<>%
-#   mutate(speaker = file %>% map_chr(possibly(extract_names, otherwise = "")))
-
-############################################
-# join metadata to file names 
-#FIXME for some reason, urls without a -[1-9] at the end seem to be missing from the metadata
-
-## Commented out because we don't need html metadata to parse
-# d %<>% left_join(cr_metadata) 
+d %<>% mutate(speakers = speaker,
+              speaker = text %>% str_extract(".* :::") %>% str_remove(" :::"))
 
 d %<>% mutate(text_head = text %>% 
                 str_sub(0,500) %>% 
@@ -306,7 +283,7 @@ return(d)
 d %<>% parse_text()
 
 d %>% 
-  filter(!str_detect(speaker,";.*;"), 
+  filter(!speaker == "404error", 
          !is.na(speaker) ) %>% 
   select(speaker, text_head, url_txt) %>% kablebox()
 ```
@@ -351,6 +328,8 @@ d %<>% mutate(speaker =
                       lag(speaker),
                       speaker)) 
 
+# fixme this is a artifact of extractmembername's original use
+d %<>% mutate(agency = congress)
 
 d1 <- d %>% extractMemberName(col_name = "speaker", members = members)
 
@@ -366,14 +345,20 @@ d1 %>%
 ```{r, eval=FALSE}
 # FOR TESTING 
 # cr_date <- "2018-02-06"
+## Many days of the CR (e.g. feburary 2020)
+dates <- cr %>% #filter(str_detect(date, "2016-02")) %>% 
+  distinct(date)
+# cr_date <- dates$date[1]
 
 # A function that reads raw data and writes parsed data
 cr_write <- function(cr_date){
+  message(cr_date)
+  
 d <- filter(cr, date == as.Date(cr_date) )
 
 #FIXME add extensions after looking into why R was hanging
-d %<>% filter(chamber %in% c("House", "Senate"))
-d <- d[1:30, ]
+#d %<>% filter(chamber %in% c("House", "Senate"))
+#d <- d[1:30, ]
 #/FIXME
 
 # the first bit of text (faster because proceedural titles area at the beginning, no need to search full text)
@@ -384,14 +369,10 @@ d %<>%
   mutate(process = str_extract(text_head, "^(ANNOUNCEMENT|RECESS|PRAYER|PLEDGE|MESSAGE|EXECUTIVE MESSAGE|EXECUTIVE COMMUNICATION|EXECUTIVE AND OTHER COMMUNICATION|MEASURE|ADJOURNMENT|DESIGNATION|THE JOURNAL|RESIGNATION|ELECTING|CONSTITUTIONAL|ADDITIONAL SPONSORS|SWEARING IN|MOMENT OF SILENCE|SENATE COMMITTEE MEETING|BUDGETARY|EFFECTS|REAPPOINTMENT|APPOINTMENT|RECALL|COMMUNICATION|REMOTE COMMITTEE PROCEEDINGS|REMOTE VOTING||ENROLLED BILL|ADDITIONAL COSPONSORS|DISCHARGED NOMINATION|CONFIRMATION|JOINT RESOLUTION|SENATE ENROLLED BILLS|PUBLICATION|EXPLANATORY STATEMENT|WITHDRAWAL)") )  
 
 d %<>%
-  mutate(speaker = file %>% map_chr(possibly(extract_names, otherwise = "404error")),
-         speaker = coalesce(speaker, process))
+  mutate(speaker = file %>% map_chr(possibly(extract_names, otherwise = "404error"))) %>% 
+  mutate(speaker = ifelse(speaker == "", "404error", speaker))
 
 d %<>% parse_text()
-
-d %<>%
-  mutate(speaker = file %>% map_chr(possibly(extract_names, otherwise = "404error")),
-         speaker = coalesce(speaker, process))
 
 # get congress from year 
 d %<>% mutate(congress = as.numeric(round((year - 2001.1)/2)) + 107) # the 107th congress began in 2001
@@ -410,6 +391,7 @@ d %<>% mutate(speaker =
                       lag(speaker),
                       speaker)) 
 
+d %<>% mutate(agency = congress)
 
 d1 <- d %>% extractMemberName(col_name = "speaker", members = members)
 
@@ -424,32 +406,51 @@ d1 %<>% mutate(path = str_c("data",
                icpsr, 
                str_c(file %>% str_remove(".htm"), 
                      "-", ID, "-", icpsr, ".txt"),
-               sep = "/"  ))
+               sep = "/"  ) )# %>% here::here())
+
+head(d1$path)
 
 # make missing directories
 make_dir <- function(x){
 if(!dir.exists(x)){dir.create(x)}
 }
 
+# years
+walk(str_remove(d1$path, "/[0-9A-Z]*/CREC.*"),
+     .f = make_dir)
+
+# icpsr
 walk(str_remove(d1$path, "/CREC.*"),
      .f = make_dir)
 
+# dir.exists(head(d1$path))
+# dir.create(d1$path[1])
 ## May want to change directory 
 # here(other_dir) %>% str_remove("project_root/")
 
-# save
+# test 
+# write_lines(d1$text[1], d1$path[1])
+
+# save 
 walk2(d1$text,
-      here::here(d1$path),
+      d1$path,
       .f = write_lines)
-}
+} # /END SAVE TEXT FUNCTION
 
 ## One day of the CR
 # cr_write("2020-02-06")
 
 ## Many days of the CR (e.g. feburary 2020)
-dates <- cr %>% filter(str_detect(date, "2016-02")) %>% distinct(date)
+dates <- cr %>% #filter(str_detect(date, "2016-02")) %>% 
+  distinct(date)
 
-walk(dates,
+# Testing 
+cr_date <- dates$date[3]
+cr_date <- "2020-09-23"
+cr_write(cr_date)
+
+# save all
+walk(dates$date,
     cr_write)
 ```
 
