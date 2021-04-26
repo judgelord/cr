@@ -9,6 +9,16 @@ library(magrittr)
 library(tidytext)
 library(crayon)
 
+# Devin's members data (expanded from voteview)
+load(here::here("data", "members.Rdata"))
+
+# Devin's name matching function 
+source(here::here("code", "nameMethods.R"))
+
+# common typos and known permutations and nicknames 
+source(here::here("code", "MemberNameTypos.R"))
+
+
 # a function to parse files from htm folder to txt folder
 parse_cr <- function(bulk_directory = here::here("data", "htm"), # directory for bulk cr htm files 
                      skip_parsed = T, 
@@ -40,7 +50,7 @@ if(dates == "all"){
 if(skip_parsed == T){
   cr_parsed <- list.files(bulk_directory %>% str_replace("/htm", "/txt"), recursive = T)
   
-  cr_parsed %<>% str_extract("[0-9]{4}-[0-9]{2}-[0-9]{2}") %<>% unique()
+  cr_parsed %<>% str_extract("[0-9]{4}-[0-9]{2}-[0-9]{2}") %<>% unique() %>% as.Date()
   
   cr %<>% filter(!date %in% cr_parsed)
 }
@@ -195,14 +205,6 @@ parse_text <- function(d){
 ### 5. Match with voteview 
 
 
-# Devin's members data (expanded from voteview)
-load(here::here("data", "members.Rdata"))
-
-# Devin's name matching function 
-source(here::here("code", "nameMethods.R"))
-
-# common typos and known permutations and nicknames 
-source(here::here("code", "MemberNameTypos.R"))
 
 
 
