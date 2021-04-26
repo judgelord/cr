@@ -42,10 +42,10 @@ cr <- tibble(file = cr_file,
 cr %<>% arrange(date) %>% arrange(rev(date))
 
 # FIXME make dates a vector so that a vec of dates can be provided, not a df
-if(dates == "all"){
+if(as.character(dates) == "all"){
   dates <- cr %>% 
     filter(year <2021) %>% #FIXME when voteview members data are updated 
-    distinct(date)
+    pull(date)
 }
 
 if(skip_parsed == T){
@@ -211,8 +211,8 @@ parse_text <- function(d){
 
 ### 6.Save text parsed by date & member name
 
-# dates <- cr %>% distinct(date)
-# cr_date <- dates$date[1]
+# dates <- cr %>% pull(date)
+# cr_date <- date[1]
 
 # a function to make missing directories
 make_dir <- function(x){
@@ -305,10 +305,10 @@ cr_write <- function(cr_date){
 
 
 # Testing 
-# cr_date <- dates$date[3]
+# cr_date <- dates[3]
 # cr_date <- "2020-09-23"
 # cr_write(cr_date)
 
 # save all
-walk(dates$date, cr_write)
+walk(dates, cr_write)
 }
