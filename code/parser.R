@@ -28,6 +28,9 @@ cr <- tibble(file = cr_file,
              date = str_extract(cr_file, "[0-9]{4}-[0-9]{2}-[0-9]{2}") %>% 
                as.Date() ) 
 
+# order by date
+d %<>% arrange(date) %>% arrange(rev(date))
+
 # FIXME make dates a vector so that a vec of dates can be provided, not a df
 if(dates == "all"){
   dates <- cr %>% 
