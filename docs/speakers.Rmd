@@ -119,7 +119,7 @@ d <- cr
 #FIXME
 # just using a few documents for now
 
-# d %<>% top_n(cr, 2, date)
+d %<>% top_n(2, date)
 
 # d <- slice_head(cr, n = 30)
 # /FIXME
@@ -209,6 +209,8 @@ extract_names <- function(file){
 d %<>%
   mutate(speaker = file %>% map_chr(possibly(extract_names, otherwise = "404error"))) %>% 
   mutate(speaker = ifelse(speaker == "", "404error", speaker))
+
+dim(d)
 ```
 
 ---
@@ -240,12 +242,21 @@ d %>%
 # speakers <- d$speaker[26] 
 # file <- d$file[26]
 parse <- function(speakers, file){
+  print(speakers)
 
   text <- all_text(file) # all text
   
-  t <- text %>%  str_split(speakers %>% str_replace_all(";", "|") ) %>% unlist()
+  # in case the split pattern is first 
   
-  s <- paste(c("header", speakers %<>% str_split(";") %>% unlist())) %>% str_c(" :::")
+  text <- str_c(":::", text)
+  
+  t <- text %>%  str_split(speakers %>% 
+                             str_replace_all(";", "|") ) %>% 
+    unlist()
+  
+  s <- paste(c("header", 
+               speakers %<>% str_split(";") %>% unlist(),
+             " :::"))
 
   
   speech <- map2(.x = s, 
@@ -278,6 +289,7 @@ d %<>% mutate(text_head = text %>%
 return(d)
 } #END parse
 
+dim(d)
 d %<>% parse_text()
 
 d %>% 
@@ -301,13 +313,13 @@ d %>%
 
 ```{r}
 # Devin's members data (expanded from voteview)
-load(here("data", "members.Rdata"))
+load(here::here("data", "members.Rdata"))
 
 # Devin's name matching function 
-source(here("code", "nameMethods.R"))
+source(here::here("code", "nameMethods.R"))
 
 # common typos and known permutations and nicknames 
-source(here("code", "MemberNameTypos.R"))
+source(here::here("code", "MemberNameTypos.R"))
 
 # get congress from year 
 d %<>% mutate(congress = as.numeric(round((year - 2001.1)/2)) + 107) # the 107th congress began in 2001
