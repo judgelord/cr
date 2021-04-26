@@ -22,9 +22,9 @@ library(here)
 
 # a date range to scrape
 dates <- seq(as.Date("2007/01/01"), 
-  #as.Date("2021/04/01"),
-  Sys.Date(), # today
-  by = "day")
+             #as.Date("2021/04/01"),
+             Sys.Date(), # today
+             by = "day")
 
 # a function to make a data frame of of all cr text urls for a date
 get_cr_df <- function(date, section){
@@ -34,6 +34,7 @@ get_cr_df <- function(date, section){
   url <- str_c("https://www.congress.gov/congressional-record", 
                date %>% str_replace_all("-", "/"), 
                section, sep = "/")
+  
   
   pages <- read_html(url) %>%
     html_nodes("a") # "a" nodes are linked text
@@ -96,7 +97,9 @@ cr_metadata %<>%
            str_replace("-1.htm", ".htm")
   ) 
 
-#url <- cr_metadata$url[1]
+# inspect
+head(cr_metadata$url)
+head(cr_metadata$file)
 
 
 temp <- cr_metadata
@@ -118,8 +121,6 @@ save(cr_metadata, file = here::here("data", "cr_metadata.Rdata"))
 
 # TXT pages look like this: https://www.congress.gov/115/crec/2017/06/06/modified/CREC-2017-06-06-pt1-PgS3253-6.htm
 
-head(cr_metadata$url)
-head(cr_metadata$file)
 
 
 
@@ -137,6 +138,7 @@ dim(cr_to_get)
 
 head(cr_to_get$file)
 head(cr_to_get$url)
+
 # a function to download htm
 get_cr_htm <- function(url){
   
@@ -165,5 +167,4 @@ cr_metadata %<>% arrange(date) %>% arrange(rev(date))
 
 # download file for each url 
 walk(cr_to_get$url, get_cr_htm)
-
 
