@@ -44,6 +44,7 @@ cr %<>% arrange(date) %>% arrange(rev(date))
 # FIXME make dates a vector so that a vec of dates can be provided, not a df
 if(dates == "all"){
   dates <- cr %>% 
+    filter(year <2021) %>% #FIXME when voteview members data are updated 
     distinct(date)
 }
 
