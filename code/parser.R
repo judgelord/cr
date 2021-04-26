@@ -29,7 +29,7 @@ cr <- tibble(file = cr_file,
                as.Date() ) 
 
 # order by date
-d %<>% arrange(date) %>% arrange(rev(date))
+cr %<>% arrange(date) %>% arrange(rev(date))
 
 # FIXME make dates a vector so that a vec of dates can be provided, not a df
 if(dates == "all"){
@@ -38,11 +38,11 @@ if(dates == "all"){
 }
 
 if(skip_parsed == T){
-  cr_parsed <- list.files(bulk_directory %>% str_replace(".htm", ".txt"), recursive = T)
+  cr_parsed <- list.files(bulk_directory %>% str_replace("/htm", "/txt"), recursive = T)
   
   cr_parsed %<>% str_extract("[0-9]{4}-[0-9]{2}-[0-9]{2}") %<>% unique()
   
-  cr_file %<>% filter(!date %in% cr_parsed)
+  cr %<>% filter(!date %in% cr_parsed)
 }
 
 # get congress from year 
