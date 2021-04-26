@@ -25,6 +25,7 @@ knitr::opts_chunk$set(echo = TRUE,
 
 
 library(tidyverse)
+library(here)
 library(rvest)
 library(readr)
 library(magrittr)
@@ -237,26 +238,37 @@ d %>%
 ### 4. Parse texts with multiple speakers
 
 ```{r}
+correct <- . %>% 
+  str_replace_all("\\)", "\\\\)") %>% 
+  str_replace_all("\\(", "\\\\(") 
+
+speakers %>% correct()
+
 # a function to parse files with more than one speaker
 # for testing
-# speakers <- d$speaker[26] 
-# file <- d$file[26]
-parse <- function(speakers, file){
-  print(speakers)
+# speaker_list <- d$speaker[22] 
+# file <- d$file[22]
+parse <- function(speaker_list, file){
+  
+  speaker_list %<>% correct()
 
   text <- all_text(file) # all text
   
   # in case the split pattern is first 
-  
   text <- str_c(":::", text)
   
-  t <- text %>%  str_split(speakers %>% 
-                             str_replace_all(";", "|") ) %>% 
+  # speakers regex
+  speaker_pattern <- speaker_list %>%  str_replace_all(";", "|")
+  
+  t <- text %>%  str_split(speaker_pattern) %>% 
     unlist()
   
-  s <- paste(c("header", 
-               speakers %<>% str_split(";") %>% unlist(),
-             " :::"))
+  
+  print(speaker_pattern)
+  
+  extracted <- text %>% str_extract_all(speaker_pattern) %>% unlist()
+    
+  s <- c("header", extracted) %>% str_c(" :::")
 
   
   speech <- map2(.x = s, 
