@@ -151,9 +151,7 @@ The "View TXT in new window" URL takes us to a .htm file of just the congression
 ```{r download_htm, eval = FALSE}
 # Identify files already downloaded 
 downloaded <- list.files(here::here("data", "htm"))
-
-# In my case, I saved these files in another directory:
-# downloaded <- list.files("/Users/devin/cr_bulk/data/htm")
+length(downloaded)
 
 # a function to download htm
 get_cr_htm <- function(url){

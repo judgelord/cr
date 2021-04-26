@@ -75,13 +75,12 @@ cr_metadata %<>%
 
 ```{r file-metadata, cache=TRUE}
 # directory for bulk cr files 
-bulk_directory <- here::here("data", "htm") %>%
-  str_replace("cr", "cr_bulk")
+bulk_directory <- here::here("data", "htm") #%>% str_replace("cr", "cr_bulk")
 
 # load cr text file names
 cr_file <- list.files(bulk_directory)
 
-file.size(cr_file %>% head() )
+file.size(here::here("data", "htm", cr_file[1:10] ))
 
 # cr %<>% filter(file.info)
 
@@ -119,8 +118,9 @@ cr %<>% mutate(url_txt = str_c("https://www.congress.gov/", congress, "/crec/",
 # just using a few documents for now
 # d %<>% top_n(2, date)
 
-d <- filter(cr, date == as.Date("2018-03-08") )
+#d <- filter(cr, date == as.Date("2018-03-08") )
 
+d <- cr
 
 d <- d[1:30, ]
 # /FIXME
@@ -206,6 +206,7 @@ extract_names <- function(file){
 }
 
 ## Test
+# file <- d$file[22]
 # extract_names(d$file[22])
 
 d %<>%
@@ -351,6 +352,7 @@ d %<>% mutate(speaker =
                       lag(speaker),
                       speaker)) 
 
+d %<>% mutate(agency = congress)
 
 d1 <- d %>% extractMemberName(col_name = "speaker", members = members)
 
@@ -366,6 +368,7 @@ d1 %>%
 ```{r, eval=FALSE}
 # FOR TESTING 
 # cr_date <- "2018-02-06"
+# cr_date <- dates$date[1]
 
 # A function that reads raw data and writes parsed data
 cr_write <- function(cr_date){
@@ -447,7 +450,8 @@ walk2(d1$text,
 # cr_write("2020-02-06")
 
 ## Many days of the CR (e.g. feburary 2020)
-dates <- cr %>% filter(str_detect(date, "2016-02")) %>% distinct(date)
+dates <- cr %>% #filter(str_detect(date, "2016-02")) %>% 
+  distinct(date)
 
 walk(dates,
     cr_write)
