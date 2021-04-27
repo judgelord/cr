@@ -254,9 +254,10 @@ dim(d1)
     mutate(file = file %>% replace_na("CREC-missing"),
            icpsr = icpsr %>% replace_na("NA"))
   
-  d1 %<>% 
-    group_by(file, icpser) %>% 
-    mutate(ID = dplyr::row_number() %>% formatC(width=3, flag="0"))
+  # FIXME next time I parse the whole thing, 2-diget ids by member+page may be better than by date 
+  # d1 %<>% 
+    # group_by(file, icpsr) %>% 
+    # mutate(ID = dplyr::row_number() %>% formatC(width=3, flag="0"))
   
   # FIXME path should be relative to bulk directory:
   # bulk_directory %>% str_replace(".htm", ".txt")
