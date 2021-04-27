@@ -252,7 +252,10 @@ dim(d1)
   # fill in empty
   d1 %<>% 
     mutate(file = file %>% replace_na("CREC-missing"),
-           icpsr = icpsr %>% replace_na("NA"))
+           icpsr = icpsr %>% 
+             # Replace missing icpsr with speaker names 
+             coalesce(speaker) %>% 
+             replace_na("NA"))
   
   # FIXME next time I parse the whole thing, 2-diget ids by member+page may be better than by date 
   # d1 %<>% 
