@@ -45,12 +45,12 @@ cr %<>% arrange(date) %>% arrange(rev(date))
 if(as.character(dates) == "all"){
   dates <- cr %>% 
     filter(year <2021) %>% #FIXME when voteview members data are updated 
-    pull(date)
+    pull(date) %>% unique()
 }
 
 if(skip_parsed == T){
   cr_parsed <- list.files(bulk_directory %>% str_replace("/htm", "/txt"), recursive = T)
-  
+  length(cr_parsed)
   cr_parsed %<>% str_extract("[0-9]{4}-[0-9]{2}-[0-9]{2}") %<>% unique() %>% as.Date()
   
   cr %<>% filter(!date %in% cr_parsed)
@@ -310,5 +310,5 @@ cr_write <- function(cr_date){
 # cr_write(cr_date)
 
 # save all
-walk(dates, cr_write)
+walk(unique(dates), cr_write)
 }
