@@ -41,7 +41,23 @@ parse_cr <- function(bulk_directory = here::here("data", "htm"), # directory for
                      skip_parsed = T, 
                      dates = "all"){
 
-
+  ### 1. Metadata from file names
+  # load cr text file names
+  cr_file <- list.files(bulk_directory)
+  
+  # in case we need to filter out small, corrupted files
+  # file.size(here::here("data", "htm", cr_file[1:10] ))
+  # cr %<>% filter(file.info)
+  
+  # extract date from file name
+  cr <- tibble(file = cr_file,
+               year = str_extract(cr_file, "[0-9]{4}") %>% as.numeric(),
+               date = str_extract(cr_file, "[0-9]{4}-[0-9]{2}-[0-9]{2}") %>% 
+                 as.Date() ) 
+  
+  # order by date
+  cr %<>% arrange(date) %>% arrange(rev(date))
+  
 
 # FIXME make dates a vector so that a vec of dates can be provided, not a df
 if(as.character(dates) == "all"){
@@ -54,8 +70,9 @@ if(skip_parsed == T){
   cr_parsed <- list.files(bulk_directory %>% str_replace("/htm", "/txt"), recursive = T)
   length(cr_parsed)
   cr_parsed %<>% str_extract("[0-9]{4}-[0-9]{2}-[0-9]{2}") %<>% unique() %>% as.Date()
-  
+  length(cr_parsed)
   cr %<>% filter(!date %in% cr_parsed)
+  nrow(cr)
 }
 
 # get congress from year 
