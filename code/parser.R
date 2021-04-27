@@ -18,13 +18,7 @@ source(here::here("code", "nameMethods.R"))
 # common typos and known permutations and nicknames 
 source(here::here("code", "MemberNameTypos.R"))
 
-
-# a function to parse files from htm folder to txt folder
-parse_cr <- function(bulk_directory = here::here("data", "htm"), # directory for bulk cr htm files 
-                     skip_parsed = T, 
-                     dates = "all"){
-
-  ### 1. Metadata from file names
+### 1. Metadata from file names
 # load cr text file names
 cr_file <- list.files(bulk_directory)
 
@@ -40,6 +34,14 @@ cr <- tibble(file = cr_file,
 
 # order by date
 cr %<>% arrange(date) %>% arrange(rev(date))
+
+
+# a function to parse files from htm folder to txt folder
+parse_cr <- function(bulk_directory = here::here("data", "htm"), # directory for bulk cr htm files 
+                     skip_parsed = T, 
+                     dates = "all"){
+
+
 
 # FIXME make dates a vector so that a vec of dates can be provided, not a df
 if(as.character(dates) == "all"){
