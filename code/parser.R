@@ -36,60 +36,6 @@ cr <- tibble(file = cr_file,
 cr %<>% arrange(date) %>% arrange(rev(date))
 
 
-# a function to parse files from htm folder to txt folder
-parse_cr <- function(bulk_directory = here::here("data", "htm"), # directory for bulk cr htm files 
-                     skip_parsed = T, 
-                     dates = "all"){
-
-  ### 1. Metadata from file names
-  # load cr text file names
-  cr_file <- list.files(bulk_directory)
-  
-  # in case we need to filter out small, corrupted files
-  # file.size(here::here("data", "htm", cr_file[1:10] ))
-  # cr %<>% filter(file.info)
-  
-  # extract date from file name
-  cr <- tibble(file = cr_file,
-               year = str_extract(cr_file, "[0-9]{4}") %>% as.numeric(),
-               date = str_extract(cr_file, "[0-9]{4}-[0-9]{2}-[0-9]{2}") %>% 
-                 as.Date() ) 
-  
-  # order by date
-  cr %<>% arrange(date) %>% arrange(rev(date))
-  
-
-# FIXME make dates a vector so that a vec of dates can be provided, not a df
-if(as.character(dates) == "all"){
-  dates <- cr %>% 
-    filter(year <2021) %>% #FIXME when voteview members data are updated 
-    pull(date) %>% unique()
-}
-
-if(skip_parsed == T){
-  cr_parsed <- list.files(bulk_directory %>% str_replace("/htm", "/txt"), recursive = T)
-  length(cr_parsed)
-  cr_parsed %<>% str_extract("[0-9]{4}-[0-9]{2}-[0-9]{2}") %<>% unique() %>% as.Date()
-  length(cr_parsed)
-  cr %<>% filter(!date %in% cr_parsed)
-  dim(cr)
-}
-
-# get congress from year 
-cr %<>% mutate(congress = as.numeric(round((year - 2001.1)/2)) + 107) # the 107th congress began in 2001
-
-# extract chamber from URL 
-cr %<>% mutate(chamber = str_extract(file, "Pg.") %>% 
-                 str_remove("Pg") %>%
-                 str_replace("E", "Extensions of Remarks") %>% 
-                 str_replace("H", "House") %>% 
-                 str_replace("S", "Senate") )
-
-# reconstruct URLs from file names
-cr %<>% mutate(url_txt = str_c("https://www.congress.gov/", congress, "/crec/", 
-                               date %>% str_replace_all("-", "/"), 
-                               "/modified/", 
-                               file))
 
 
 ### 2. Functions to read in text 
@@ -239,11 +185,11 @@ make_dir <- function(x){
 }
 
 # A function that reads raw data and writes parsed data
-cr_write <- function(cr_date){
+write_cr <- function(cr_date){
   message(cr_date)
   
   d <- filter(cr, date == as.Date(cr_date) )
-
+dim(d)
   
   # the first bit of text (faster because proceedural titles area at the beginning, no need to search full text)
   d$text_head <- d$file %>% map_chr(possibly(head_text, otherwise = "")) 
@@ -257,7 +203,7 @@ cr_write <- function(cr_date){
     mutate(speaker = ifelse(speaker == "", "404error", speaker))
   
   d %<>% parse_text()
-  
+dim(d)  
   # get congress from year 
   d %<>% mutate(congress = as.numeric(round((year - 2001.1)/2)) + 107) # the 107th congress began in 2001
   
@@ -276,9 +222,9 @@ cr_write <- function(cr_date){
                          speaker)) 
   
   d %<>% mutate(agency = "cr")
-  
+dim(d)  
   d1 <- d %>% extractMemberName(col_name = "speaker", members = members)
-  
+dim(d1)  
   # fill in empty
   d1 %<>% 
     mutate(file = file %>% replace_na("CREC-missing"),
@@ -324,5 +270,63 @@ cr_write <- function(cr_date){
 # cr_write(cr_date)
 
 # save all
-walk(unique(dates), cr_write)
+# walk(.x = unique(dates), .f = cr_write)
+
+# a function to parse files from htm folder to txt folder
+parse_cr <- function(bulk_directory = here::here("data", "htm"), # directory for bulk cr htm files 
+                     skip_parsed = T, 
+                     dates = "all"){
+  
+  ### 1. Metadata from file names
+  # load cr text file names
+  cr_file <- list.files(bulk_directory)
+  
+  # in case we need to filter out small, corrupted files
+  # file.size(here::here("data", "htm", cr_file[1:10] ))
+  # cr %<>% filter(file.info)
+  
+  # extract date from file name
+  cr <- tibble(file = cr_file,
+               year = str_extract(cr_file, "[0-9]{4}") %>% as.numeric(),
+               date = str_extract(cr_file, "[0-9]{4}-[0-9]{2}-[0-9]{2}") %>% 
+                 as.Date() ) 
+  
+  # order by date
+  cr %<>% arrange(date) %>% arrange(rev(date))
+  
+  
+  # FIXME make dates a vector so that a vec of dates can be provided, not a df
+  if(as.character(dates) == "all"){
+    dates <- cr %>% 
+      filter(year <2021) %>% #FIXME when voteview members data are updated 
+      pull(date) %>% unique()
+  }
+  
+  if(skip_parsed == T){
+    cr_parsed <- list.files(bulk_directory %>% str_replace("/htm", "/txt"), recursive = T)
+    length(cr_parsed)
+    cr_parsed %<>% str_extract("[0-9]{4}-[0-9]{2}-[0-9]{2}") %<>% unique() %>% as.Date()
+    length(cr_parsed)
+    cr %<>% filter(!date %in% cr_parsed)
+    dim(cr)
+  }
+  
+  # get congress from year 
+  cr %<>% mutate(congress = as.numeric(round((year - 2001.1)/2)) + 107) # the 107th congress began in 2001
+  
+  # extract chamber from URL 
+  cr %<>% mutate(chamber = str_extract(file, "Pg.") %>% 
+                   str_remove("Pg") %>%
+                   str_replace("E", "Extensions of Remarks") %>% 
+                   str_replace("H", "House") %>% 
+                   str_replace("S", "Senate") )
+  
+  # reconstruct URLs from file names
+  cr %<>% mutate(url_txt = str_c("https://www.congress.gov/", congress, "/crec/", 
+                                 date %>% str_replace_all("-", "/"), 
+                                 "/modified/", 
+                                 file))
+  
+  # SAVE FILES 
+  walk(.x = unique(dates), .f = write_cr)
 }
