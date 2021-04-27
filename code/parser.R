@@ -18,7 +18,9 @@ source(here::here("code", "nameMethods.R"))
 # common typos and known permutations and nicknames 
 source(here::here("code", "MemberNameTypos.R"))
 
-### 1. Metadata from file names
+### 1. Metadata from file names in htm folder (from scraper)
+bulk_directory = here::here("data", "htm")
+
 # load cr text file names
 cr_file <- list.files(bulk_directory)
 
@@ -36,7 +38,27 @@ cr <- tibble(file = cr_file,
 cr %<>% arrange(date) %>% arrange(rev(date))
 
 
+# get congress from year 
+cr %<>% mutate(congress = as.numeric(round((year - 2001.1)/2)) + 107) # the 107th congress began in 2001
 
+# extract chamber from URL 
+cr %<>% mutate(chamber = str_extract(file, "Pg.") %>% 
+                 str_remove("Pg") %>%
+                 str_replace("E", "Extensions of Remarks") %>% 
+                 str_replace("H", "House") %>% 
+                 str_replace("S", "Senate") )
+
+# reconstruct URLs from file names
+cr %<>% mutate(url_txt = str_c("https://www.congress.gov/", congress, "/crec/", 
+                               date %>% str_replace_all("-", "/"), 
+                               "/modified/", 
+                               file))
+
+
+
+
+
+# FUNCTIONS 
 
 ### 2. Functions to read in text 
 
@@ -222,6 +244,8 @@ dim(d)
                          speaker)) 
   
   d %<>% mutate(agency = "cr")
+  
+  
 dim(d)  
   d1 <- d %>% extractMemberName(col_name = "speaker", members = members)
 dim(d1)  
@@ -229,6 +253,10 @@ dim(d1)
   d1 %<>% 
     mutate(file = file %>% replace_na("CREC-missing"),
            icpsr = icpsr %>% replace_na("NA"))
+  
+  d1 %<>% 
+    group_by(file, icpser) %>% 
+    mutate(ID = dplyr::row_number() %>% formatC(width=3, flag="0"))
   
   # FIXME path should be relative to bulk directory:
   # bulk_directory %>% str_replace(".htm", ".txt")
