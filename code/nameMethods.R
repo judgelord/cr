@@ -687,13 +687,13 @@ extractMemberName <- function(data, members = members, col_name, congresses = un
   t <- Sys.time()
 
   # Add Letter ID if missing 
-  if(!"LetterID" %in% names(data)){data$LetterID <- 1:nrow(data)}
+  if(!"LetterID" %in% names(data)){data %<>% mutate(LetterID = dplyr::row_number())}
   
   data$LetterID %<>% 
     str_squish() %>% 
     as.numeric()
   
-  data$ID <- 1:nrow(data)
+  data %<>% mutate(ID = dplyr::row_number())
   
   data %<>% 
     mutate(LetterID = coalesce(LetterID, ID) %>% # replace missing with row number 

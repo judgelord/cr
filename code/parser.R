@@ -72,7 +72,7 @@ if(skip_parsed == T){
   cr_parsed %<>% str_extract("[0-9]{4}-[0-9]{2}-[0-9]{2}") %<>% unique() %>% as.Date()
   length(cr_parsed)
   cr %<>% filter(!date %in% cr_parsed)
-  nrow(cr)
+  dim(cr)
 }
 
 # get congress from year 
@@ -275,7 +275,7 @@ cr_write <- function(cr_date){
                          lag(speaker),
                          speaker)) 
   
-  d %<>% mutate(agency = congress)
+  d %<>% mutate(agency = "cr")
   
   d1 <- d %>% extractMemberName(col_name = "speaker", members = members)
   
@@ -317,11 +317,6 @@ cr_write <- function(cr_date){
         d1$path,
         .f = write_lines)
 } # /END SAVE TEXT FUNCTION
-
-## One day of the CR
-# cr_write("2020-02-06")
-
-
 
 # Testing 
 # cr_date <- dates[3]
