@@ -28,7 +28,17 @@ d %<>% mutate(name_district = bioname %>% str_remove(",.*") %>% str_to_title() %
   mutate(district_name = cqlabel %>% str_c(bioname, sep = ": ") %>% str_remove_all(",.*|\\(|\\)"))
 ```
 
-Counts of total speeches from [code/count_speeches.R](https://github.com/judgelord/cr/blob/master/code/count_speeches.R)
+## Parsed text
+
+.txt files are saved on the Linstat server which you can access on your own computer as a [network drive](https://kb.wisc.edu/sscc/95802) or via the [Winstat vpn](https://kb.wisc.edu/sscc/working-from-home-or-other-remote-locations).
+```{r}
+knitr::include_graphics(here("figs", "winstat.png"))
+```
+
+
+## Counts of total speeches 
+
+Because the parsed txt files are saved in subfolders by year/icpsr,counts per member per year are just the number of files in each folder (see [code/count_speeches.R](https://github.com/judgelord/cr/blob/master/code/count_speeches.R)) 
 
 
 Most speeches per year: 
