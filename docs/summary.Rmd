@@ -59,7 +59,7 @@ d %>%
 The Wisconsin delegation
 ```{r wi, fig.height=11}
 d %>% 
-  filter(state_abbrev == "WI", n_speeches > 0) %>% 
+  filter(state_abbrev == "WI",!is.na(year)) %>% 
   ggplot() +
   aes(x = n_speeches, y = district_name, fill = nominate.dim1) + 
   geom_col() + 
