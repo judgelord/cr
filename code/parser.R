@@ -93,8 +93,10 @@ all_text <- function(file){
 # a function to extract speaker names
 extract_names <- function(file){
   
-  speaker_names <- "(Mr.|Mrs.|Ms.|Miss|HON.) (([A-Z]|\\.| )* |-|)(Mc|Mac|Des|De|La|[A-Z])[A-Z][A-Z]+|The PRESIDING OFFICER|The SPEAKER\\.|The SPEAKER pro tempore \\(.*?\\)|The ACTING PRESIDENT|The VICE PRESIDENT"
-  
+  speaker_names <- "(Mr.|Mrs.|Ms.|Miss|HON.) (([A-Z]|\\.| )* |-|)(Mc|Mac|Des|De|La|[A-Z])[A-Z][A-Z]+|The PRESIDING OFFICER|The SPEAKER pro tempore\\.|The SPEAKER pro tempore \\(.*?\\)|The SPEAKER\\.|The ACTING PRESIDENT|The VICE PRESIDENT"
+  #FIXME the above is not getting hyphenated names, the below fix needs testing 
+  #  speaker_names <- "(Mr.|Mrs.|Ms.|Miss|HON.) ([A-Z]+(\\. | |-)|)(Mc|Mac|Des|De|La|[A-Z])[A-Z][A-Z]+|The PRESIDING OFFICER|The SPEAKER pro tempore\\.|The SPEAKER pro tempore \\(.*?\\)|The SPEAKER\\.|The ACTING PRESIDENT|The VICE PRESIDENT"
+
   # for testing 
   #file <- d$file[41]
   
@@ -216,9 +218,8 @@ dim(d)
   # the first bit of text (faster because proceedural titles area at the beginning, no need to search full text)
   d$text_head <- d$file %>% map_chr(possibly(head_text, otherwise = "")) 
   
-  # fill in proceedural roles
-  d %<>% 
-    mutate(process = str_extract(text_head, "^(ANNOUNCEMENT|RECESS|PRAYER|PLEDGE|MESSAGE|EXECUTIVE MESSAGE|EXECUTIVE COMMUNICATION|EXECUTIVE AND OTHER COMMUNICATION|MEASURE|ADJOURNMENT|DESIGNATION|THE JOURNAL|RESIGNATION|ELECTING|CONSTITUTIONAL|ADDITIONAL SPONSORS|SWEARING IN|MOMENT OF SILENCE|SENATE COMMITTEE MEETING|BUDGETARY|EFFECTS|REAPPOINTMENT|APPOINTMENT|RECALL|COMMUNICATION|REMOTE COMMITTEE PROCEEDINGS|REMOTE VOTING||ENROLLED BILL|ADDITIONAL COSPONSORS|DISCHARGED NOMINATION|CONFIRMATION|JOINT RESOLUTION|SENATE ENROLLED BILLS|PUBLICATION|EXPLANATORY STATEMENT|WITHDRAWAL)") )  
+  ## fill in proceedural roles
+  # d %<>% mutate(process = str_extract(text_head, "^(ANNOUNCEMENT|RECESS|PRAYER|PLEDGE|MESSAGE|EXECUTIVE MESSAGE|EXECUTIVE COMMUNICATION|EXECUTIVE AND OTHER COMMUNICATION|MEASURE|ADJOURNMENT|DESIGNATION|THE JOURNAL|RESIGNATION|ELECTING|CONSTITUTIONAL|ADDITIONAL SPONSORS|SWEARING IN|MOMENT OF SILENCE|SENATE COMMITTEE MEETING|BUDGETARY|EFFECTS|REAPPOINTMENT|APPOINTMENT|RECALL|COMMUNICATION|REMOTE COMMITTEE PROCEEDINGS|REMOTE VOTING||ENROLLED BILL|ADDITIONAL COSPONSORS|DISCHARGED NOMINATION|CONFIRMATION|JOINT RESOLUTION|SENATE ENROLLED BILLS|PUBLICATION|EXPLANATORY STATEMENT|WITHDRAWAL)") )  
   
   d %<>%
     mutate(speaker = file %>% map_chr(possibly(extract_names, otherwise = "404error"))) %>% 
