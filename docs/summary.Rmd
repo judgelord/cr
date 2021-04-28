@@ -17,20 +17,11 @@ source(here::here("code/setup.R"))
 ```
 
 
-```{r, cache=TRUE}
-load(here('data', 'd_count.Rdata'))
-load(here('data', 'members.Rdata'))
 
-d <- d_count %>% left_join(members)
-
-# name + district strings for desplay
-d %<>% mutate(name_district = bioname %>% str_remove(",.*") %>% str_to_title() %>% paste(cqlabel)) %>% 
-  mutate(district_name = cqlabel %>% str_c(bioname, sep = ": ") %>% str_remove_all(",.*|\\(|\\)"))
-```
 
 ## Parsed text
 
-.txt files are saved on the Linstat server which you can access on your own computer as a [network drive](https://kb.wisc.edu/sscc/95802) or via the [Winstat vpn](https://kb.wisc.edu/sscc/working-from-home-or-other-remote-locations).
+.txt files are saved on the Linstat server which you can access on your own computer as a [network drive](https://kb.wisc.edu/sscc/95802) or via the [Winstat VPN](https://kb.wisc.edu/sscc/working-from-home-or-other-remote-locations).
 ```{r}
 knitr::include_graphics(here("figs", "winstat.png"))
 ```
@@ -38,7 +29,22 @@ knitr::include_graphics(here("figs", "winstat.png"))
 
 ## Counts of total speeches 
 
-Because the parsed txt files are saved in subfolders by year/icpsr,counts per member per year are just the number of files in each folder (see [code/count_speeches.R](https://github.com/judgelord/cr/blob/master/code/count_speeches.R)) 
+Because the parsed .txt files are saved in subfolders by year/icpsr, counts per member per year are just the number of files in each folder (see [code/count_speeches.R](https://github.com/judgelord/cr/blob/master/code/count_speeches.R)) 
+
+```{r, cache=TRUE}
+# from code/count_speeches.R
+load(here('data', 'd_count.Rdata'))
+
+# from voteview 
+load(here('data', 'members.Rdata'))
+
+# join speech counts with voteview 
+d <- d_count %>% left_join(members)
+
+# name + district strings for display
+d %<>% mutate(name_district = bioname %>% str_remove(",.*") %>% str_to_title() %>% paste(cqlabel)) %>% 
+  mutate(district_name = cqlabel %>% str_c(bioname, sep = ": ") %>% str_remove_all(",.*|\\(|\\)"))
+```
 
 
 Most speeches per year: 
