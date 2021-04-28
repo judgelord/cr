@@ -23,9 +23,22 @@ load(here('data', 'members.Rdata'))
 
 d <- d_count %>% left_join(members)
 
+# name + district strings for desplay
 d %<>% mutate(name_district = bioname %>% str_remove(",.*") %>% str_to_title() %>% paste(cqlabel)) %>% 
   mutate(district_name = cqlabel %>% str_c(bioname, sep = ": ") %>% str_remove_all(",.*|\\(|\\)"))
 ```
+
+Counts of total speeches from [code/count_speeches.R](https://github.com/judgelord/cr/blob/master/code/count_speeches.R)
+
+
+Most speeches per year: 
+```{r}
+d %>% 
+  select(year, name_district, icpsr, n_speeches) %>% 
+  arrange(-n_speeches) %>% kablebox()
+```
+
+---
 
 The Wisconsin delegation
 ```{r wi, fig.height=11}
