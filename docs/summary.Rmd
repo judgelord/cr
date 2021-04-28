@@ -1,0 +1,40 @@
+---
+title: "Speakers in the Congressional Recored"
+subtitle: 
+author: ""
+output:
+  html_document:
+    highlight: zenburn
+    toc: true
+    toc_float: true
+    code_folding: hide
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+source(here::here("code/setup.R"))
+```
+
+
+```{r, cache=TRUE}
+load(here('data', 'd_count.Rdata'))
+load(here('data', 'members.Rdata'))
+
+d <- d_count %>% left_join(members)
+
+d %<>% mutate(name_district = bioname %>% str_remove(",.*") %>% str_to_title() %>% paste(cqlabel)) %>% 
+  mutate(district_name = cqlabel %>% str_c(bioname, sep = ": ") %>% str_remove_all(",.*|\\(|\\)"))
+```
+
+The Wisconsin delegation
+```{r wi, fig.height=11}
+d %>% 
+  filter(state_abbrev == "WI", n_speeches > 0) %>% 
+  ggplot() +
+  aes(x = n_speeches, y = district_name, fill = nominate.dim1) + 
+  geom_col() + 
+  facet_wrap("year", scales = "free_y", ncol = 2) +
+  labs(y = "", x  = "Total Number of Speeches") +
+  scale_fill_gradient2(low = muted("blue"), high = muted("red"), mid = "grey80")
+```
