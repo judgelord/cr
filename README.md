@@ -28,6 +28,14 @@ This repo contains functions to do three things:
 ![](docs/figs/covid-1.png)
 
 
+### Notes about these data and methods
+
+Notes about the parser
+
+- The parser inserts ":::" after the speaker's name in the parsed text to make them easy to extract.
+- Parsed speeches include where members introduce legislation into the record. These are actually read by the clerk (beginning with the string "The Clerk read the title of the bill."), but I decided to keep them associated with the member who introduced them. 
+- The introduction of speakers to the floor appear as separate "speeches." Most all analyses will delete these and other super-short texts that are procedural things like "I yield back." Introductions in the parsed text look like this: "HON. JOHN D. DINGELL :::  of Michigan in the house of representatives"--notably these intros contain state names.
+- Occasionally, when a speaker makes a long speech, GPO divides it into subsections that don't have the speaker's name on the page (either in html or pdf). (For example, [this speech](https://www.congress.gov/congressional-record/2020/12/17/senate-section/article/S7563-8) by Senator Durbin). These get parsed as "headers" but are much longer than the typical header and are thus easy to identify. In the next version of the parser or some post hoc correction, I hope to re-attach these to the earlier pages of the speech.
 
 
 ### Other notes 
