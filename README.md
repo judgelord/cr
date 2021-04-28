@@ -1,5 +1,5 @@
 
-## Scrape, parse, and analyze the Congressional Record 
+# Scrape, parse, and analyze the Congressional Record 
 
 This repo contains functions to do three things:
 
