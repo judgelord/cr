@@ -25,3 +25,15 @@ n_speeches <- function(year, i) {
 d_count <- d %>% mutate(n_speeches = map2_int(year, icpsr, n_speeches))
 
 save(d_count, file = here("data", "d_count.Rdata"))
+
+
+
+
+# potential problems
+d %>% filter(n_speeches == 0) %>% 
+  distinct(congress, bioname) %>% 
+  add_count(bioname, sort = T) %>% 
+  group_by(bioname) %>% 
+  mutate(congress = str_c(congress, sep = ", ", collapse = ", ")) %>% 
+  distinct(bioname, congress) %>% 
+  kablebox()

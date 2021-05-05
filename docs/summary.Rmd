@@ -41,13 +41,15 @@ load(here('data', 'members.Rdata'))
 # join speech counts with voteview 
 d <- d_count %>% left_join(members)
 
+d %<>% filter(year < 2021, chamber %in% c("House", "Senate"))
+
 # name + district strings for display
 d %<>% mutate(name_district = bioname %>% str_remove(",.*") %>% str_to_title() %>% paste(cqlabel)) %>% 
   mutate(district_name = cqlabel %>% str_c(bioname, sep = ": ") %>% str_remove_all(",.*|\\(|\\)"))
 ```
 
 
-Most speeches per year: 
+### Most speeches per year 
 ```{r}
 d %>% 
   select(year, name_district, icpsr, n_speeches) %>% 
@@ -56,7 +58,7 @@ d %>%
 
 ---
 
-The Wisconsin delegation
+### The Wisconsin delegation
 ```{r wi, fig.height=11}
 d %>% 
   filter(state_abbrev == "WI",!is.na(year)) %>% 
@@ -67,3 +69,60 @@ d %>%
   labs(y = "", x  = "Total Number of Speeches") +
   scale_fill_gradient2(low = muted("blue"), high = muted("red"), mid = "grey80")
 ```
+
+
+---
+
+### Average speeches per year for members of the House
+
+```{r reps}
+# as a table per member 
+d %>% 
+  filter(chamber == "House") %>%
+  group_by(name_district) %>% 
+  summarise(average_speeches = mean(n_speeches) %>% round() ) %>% 
+  arrange(-average_speeches) %>% 
+  kablebox()
+
+# as a table per state
+d %>% 
+  filter(chamber == "House") %>%
+  group_by(state) %>% 
+  summarise(average_speeches = mean(n_speeches) %>% round() ) %>% 
+  kablebox()
+
+
+
+# as a map
+states <- map_data("state") %>% rename(state = region)
+
+d %>% 
+  filter(chamber == "House") %>%
+  group_by(state) %>% 
+  summarise(average_speeches = mean(n_speeches) ) %>% 
+  left_join(states) %>% 
+  group_by(subregion) %>%
+  ggplot( aes(x = long, y = lat, group = group, fill = average_speeches) ) +
+  geom_polygon(color = "white") + 
+  theme_void()
+
+
+d %>% 
+  filter(chamber == "House") %>%
+  group_by(state, year) %>% 
+  summarise(average_speeches = mean(n_speeches) ) %>% 
+  left_join(states) %>% 
+  group_by(subregion) %>%
+  ggplot( aes(x = long, y = lat, group = group, fill = average_speeches) ) +
+  geom_polygon(color = "white") + 
+  theme_void() +
+  facet_wrap("year")
+```
+
+## Counts of speeches by type
+
+> TODO: Excluding proceedural speeches
+
+> TODO: Legislative vs non-legislative
+
+## Counts of speeches mentioning district
