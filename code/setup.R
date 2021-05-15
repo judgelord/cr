@@ -1,3 +1,21 @@
+options(stringsAsFactors = FALSE)
+
+requires <- c("magrittr",
+              "crayon",
+              "scales",
+              "here",
+              "httr",
+              "jsonlite",
+              "tm",
+              "tidytext",
+              "topicmodels",
+              "textfeatures",
+              "cleanNLP",
+              "kableExtra",
+              "tidyverse")
+to_install <- c(requires %in% rownames(installed.packages()) == FALSE)
+install.packages(c(requires[to_install], "NA"), repos = "https://cloud.r-project.org/" )
+rm(requires, to_install)
 
 knitr::opts_chunk$set(echo = TRUE, 
                       cache = FALSE, 
