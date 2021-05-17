@@ -140,4 +140,3 @@ d %>% group_by(type) %>% summarise(average_nchar = mean(file_size)) %>% arrange(
 # save
 d_meta <- d %>% select(year, congress, icpsr, state_abbrev, n_speeches, file_name, file_size, url, type, subtype) 
 save(d_meta, file = here("data", "d_meta.Rdata"))
->>>>>>> bb1e9c64483d123f50873e4aa8d6d150894de2be

@@ -119,10 +119,91 @@ d %>%
   facet_wrap("year")
 ```
 
-## Counts of speeches by type
+## Counts of sections by type
 
-> TODO: Excluding proceedural speeches
+###  Types: legislation, business, process, and other
 
-> TODO: Legislative vs non-legislative
+From `code/count_speeches.R`, saved as `data/d_meta.Rdata`
+
+```
+legislation_strings <- "ACT|BILL|RESOLUTION|AMENDMENT|EARMARK|APPROPRIATIONS|AUTHORIZATION|BUDGET|SPONSORS|WITHDRAWAL|PROVIDING FOR CONGRESSIONAL DISAPPROVAL OF A RULE SUBMITTED"
+
+business_strings <- "PRAYER|PLEDGE OF ALLEGIANCE|MORNING BUSINESS|MESSAGE|PRIVILEGES OF THE|CONDEMING|APPOINTMENT|NOMINATION|CONFIRMATION|REPORT|PETITION|MEMORIAL|COMMUNICATION| MONTH|SCHEDULE|LEAVE OF ABSENCE|GENERAL LEAVE|ELECTING|RESIGNATION|MOMENT OF SILENCE"
+  
+process_strings <- "RECOGNIZED FOR [0-9] MINUTES|ANNOUNCEMENT|RESERVATION OF LEADER TIME|UNANIMOUS CONSENT|ADJOURNMENT|EXECUTIVE SESSION|PETITION| ORDER|^ORDER|MOTION|RECESS|CALENDAR|RECOGNITION|WELCOMING|OATH |SPEAKER PRO TEMPORE|MEASURES DISCHARGED|INTENT TO OBJECT"
+```
+
+```{r}
+# clean up headers into type and subtype 
+load(here("data", "d_meta.Rdata"))
+
+d_meta %>% count(type) %>% kablebox() 
+```
+
+### Subtypes
+```{r}
+d_meta %>% count(type, subtype, sort = T) %>% kablebox() 
+```
+
+### Type = "Other"
+```{r}
+
+count(d_meta %>% filter(type == "other"), subtype, sort = T) %>% kablebox()
+```
+
 
 ## Counts of speeches mentioning district
+
+Subset of speeches that mention "district" `code/count_district.R`, saved as `data/d_district.Rdata`.
+
+Average speeches per congress mentioning "district" from the Wisconsin delegation:
+
+```{r}
+load(here("data","d_district.Rdata"))
+
+# average per member of the WI 
+d_district %>% 
+  filter(state_abbrev == "WI") %>% 
+  group_by(congress, icpsr, state_abbrev) %>% 
+  count(name = "district_mentions") %>% 
+  ungroup() %>% 
+  group_by(icpsr) %>% 
+  summarise(average_district_mentions = mean(district_mentions)) %>% 
+  left_join(members %>% distinct(bioname, icpsr)) %>% 
+  ggplot() +
+  aes(x = average_district_mentions, y = bioname) +
+  geom_col()
+```
+
+## Sentences mentioning "district"
+from the Wisconsin delegation 
+
+```{r}
+load(here("data", "d_district_sentences_wi.Rdata"))
+
+# clean up strings for easier reading
+d_district_sentences_wi %<>% 
+  mutate(district_sentences = district_sentences %>% 
+           str_remove("_* </pre></body></html>") %>%
+           str_remove_all("\\$|`"))
+  
+# a sample of sentences from 100 speeches
+d_district_sentences_wi %>% 
+  filter(!str_detect(district_sentences, "district court")) %>%
+  distinct(type, subtype, district_sentences, url) %>% 
+  select(type, subtype, district_sentences, url) %>% 
+  kablebox()
+```
+
+### Sentences mentioning "my district"
+
+```{r}
+# a sample of sentences from 100 speeches
+d_district_sentences_wi %>% 
+  filter(str_detect(district_sentences, "my district")) %>%
+  distinct(type, subtype, district_sentences, url) %>% 
+  select(type, subtype, district_sentences, url) %>% 
+  kablebox()
+```
+
+> TODO: (1) Refine this to exclude "district court" etc. and (2) include other district-referencing language
