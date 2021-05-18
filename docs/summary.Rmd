@@ -175,6 +175,30 @@ d_district %>%
   geom_col()
 ```
 
+Average number speeches mentioning "district" for members of the House
+
+```{r district-speeches-per-year}
+# average speeches per house member
+d_district %>% 
+  left_join(members %>% distinct(icpsr, chamber, congress, state, state_abbrev)) %>% 
+  filter(chamber == "House") %>%
+  count(icpsr, state, year, name = "district_speeches", .drop = FALSE) %>% 
+  ungroup() %>% 
+  group_by(state, year) %>% 
+  summarise(average_district_speeches = mean(district_speeches, na.rm = T) %>% replace_na(0)) %>% 
+  ungroup() %>% 
+  # fill missing states with 0 
+  full_join(distinct(states, state)) %>% 
+  complete(year, state, fill = list(average_district_speeches = 0)) %>% 
+  # Join in lat and long 
+  left_join(states) %>% 
+  group_by(subregion) %>%
+  ggplot( aes(x = long, y = lat, group = group, fill = average_district_speeches) ) +
+  geom_polygon(color = "white") + 
+  theme_void() +
+  facet_wrap("year")
+```
+
 ## Sentences mentioning "district"
 from the Wisconsin delegation 
 
