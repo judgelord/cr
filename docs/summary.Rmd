@@ -22,6 +22,20 @@ source(here::here("code/setup.R"))
 ## Parsed text
 
 .txt files are saved on the Linstat server which you can access on your own computer as a [network drive](https://kb.wisc.edu/sscc/95802) or via the [Winstat VPN](https://kb.wisc.edu/sscc/working-from-home-or-other-remote-locations).
+
+.txt file names  look like this: "CREC-2010-11-16-pt1-PgH7478-000533-14413.txt"
+
+They contain 
+
+- the date ("2010-11-16") 
+
+- the page number ("pt1-PgH7478"--"H" because it is the House section, Senate is "S" and Extensions of Remarks is "E")  
+
+- a speech ID assigned per day by the parser. "000533" means that this was the 533rd "speech" of the day (recall that "speeches" include simple speech acts like "I yield" as well as headers and other text that is not spoken parsed as seperate files)
+
+- and finally, the members ICPSR ID. "14413" is Representative Norman Dicks. 
+
+
 ```{r}
 knitr::include_graphics(here("figs", "winstat.png"))
 ```
@@ -119,7 +133,9 @@ d %>%
   facet_wrap("year")
 ```
 
-## Counts of sections by type
+## Counts of speeches by type
+
+This is similar to counts of congressional record sections by type [here](), but now parsed by speaker. This means that "legislation" counts are much higher becasue each section of legislation contains many speakers. 
 
 ###  Types: legislation, business, process, and other
 
@@ -154,7 +170,13 @@ count(d_meta %>% filter(type == "other"), subtype, sort = T) %>% kablebox()
 
 ## Counts of speeches mentioning district
 
-Subset of speeches that mention "district" `code/count_district.R`, saved as `data/d_district.Rdata`.
+The subset of speeches that mention "district" from `code/count_district.R` is saved as `data/d_district.Rdata`.
+
+For more accurate and faster counts of district-oriented behavior etc., I am excluding two types of speeches:
+
+- speeches under 1000 characters (always procedural, as far as I can tell)
+
+- speeches that appear to be procedural or chamber business based their header text. 
 
 Average speeches per congress mentioning "district" from the Wisconsin delegation:
 
