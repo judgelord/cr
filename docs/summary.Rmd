@@ -224,6 +224,8 @@ d_district %>%
 ## Sentences mentioning "district"
 from the Wisconsin delegation 
 
+Excluding "district court" "their district" "their home district" "their state or district" "each/every district" "school district" etc.
+
 ```{r}
 load(here("data", "d_district_sentences_wi.Rdata"))
 
@@ -232,24 +234,33 @@ d_district_sentences_wi %<>%
   mutate(district_sentences = district_sentences %>% 
            str_remove("_* </pre></body></html>") %>%
            str_remove_all("\\$|`"))
+
+to_exclude <- "district (court|attorney)|(each|every) (congressional |)district|their (congressional|home|state(s|) or|) district|school district|, districts|locality or congressional district"
   
 # a sample of sentences from 100 speeches
 d_district_sentences_wi %>% 
-  filter(!str_detect(district_sentences, "district court")) %>%
+  filter(!str_detect(district_sentences, to_exclude)) %>%
   distinct(type, subtype, district_sentences, url) %>% 
   select(type, subtype, district_sentences, url) %>% 
   kablebox()
 ```
+
+(Excluding `r to_exclude`)
 
 ### Sentences mentioning "my district"
 
+Also including my/our district, my/our congressional district/ my/our community/communities, my/our home district etc. 
+
 ```{r}
+to_include <- "(my|our)( own|) district|(my|our)( own|) congressional district|(my|our)( own|) communit|(my/our)( own|) home district|i represent a district|(my/our)( own|) constituent"
+
 # a sample of sentences from 100 speeches
 d_district_sentences_wi %>% 
-  filter(str_detect(district_sentences, "my district")) %>%
+  filter(str_detect(district_sentences, to_include)) %>%
   distinct(type, subtype, district_sentences, url) %>% 
   select(type, subtype, district_sentences, url) %>% 
   kablebox()
 ```
+(Including only `r to_include`)
 
-> TODO: (1) Refine this to exclude "district court" etc. and (2) include other district-referencing language
+> TODO: (1) Refine this to exclude non-district-referenceing language and (2) include other district-referencing language 
