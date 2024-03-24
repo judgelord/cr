@@ -1,7 +1,7 @@
+> #  UPDATE: The functions in this repository have migrated to the [`congressionalrecord`](https://judgelord.github.io/congressionalrecord/)  R package. Active development is now in the [package repository](https://github.com/judgelord/congressionalrecord/).
+
 
 # Scrape, parse, and analyze the Congressional Record 
-
-> UPDATE: The functions in this repository have migrated to the [`congressionalrecord`](https://judgelord.github.io/congressionalrecord/)  R package. Active development is now in the [package repository](https://github.com/judgelord/congressionalrecord/).
 
 This repo (and the package) contains functions to do three things:
 
